@@ -1,0 +1,67 @@
+<view class="page">
+  <view class="header">
+    <view class="logo">
+      <image class="logo-image" src="/assets/images/wurenji.jpg" mode="aspectFit"></image>
+    </view>
+    <text class="title">{{appName || '智慧农业服务平台'}}</text>
+    <text class="subtitle">请选择您要进入的角色</text>
+  </view>
+
+  <view class="content">
+    <view class="role-list">
+      <view
+        wx:for="{{roles}}"
+        wx:key="code"
+        class="role-item {{selectedRole === item.code ? 'role-item-selected' : ''}}"
+        data-rolecode="{{item.code}}"
+        bindtap="enterRole"
+      >
+        <view class="role-icon">
+          <image src="{{item.icon}}" mode="aspectFit"></image>
+        </view>
+        <view class="role-info">
+          <text class="role-name">{{item.name}}</text>
+          <text class="role-description">{{item.description}}</text>
+        </view>
+        <view class="role-arrow">
+          <text class="arrow-text">→</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="footer">
+    <text class="footer-text">登录即表示同意</text>
+    <text class="footer-link">《用户协议》</text>
+    <text class="footer-text">和</text>
+    <text class="footer-link">《隐私政策》</text>
+  </view>
+
+  <!-- 微信登录弹窗 -->
+  <view class="wechat-login-dialog" wx:if="{{showWechatLoginDialog}}">
+    <view class="dialog-mask" bindtap="onCancelWechatLogin"></view>
+    <view class="dialog-content">
+      <view class="dialog-header">
+        <image class="wechat-logo" src="/assets/images/wechat-icon.png" mode="aspectFit"></image>
+        <text class="dialog-title">微信授权登录</text>
+      </view>
+      <view class="dialog-body">
+        <text class="dialog-message">即将登录为「{{selectedRole === 'FARMER' ? '农户' : '飞手'}}」身份</text>
+        <text class="dialog-tip">点击"确认"将唤起微信授权</text>
+      </view>
+      <view class="dialog-footer">
+        <button class="dialog-btn cancel" bindtap="onCancelWechatLogin">取消</button>
+        <button class="dialog-btn confirm" bindtap="onConfirmWechatLogin">确认</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载中弹窗 -->
+  <view class="loading-dialog" wx:if="{{loading}}">
+    <view class="loading-mask"></view>
+    <view class="loading-content">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">微信登录中...</text>
+    </view>
+  </view>
+</view>

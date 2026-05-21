@@ -1,0 +1,72 @@
+<view class="role-select-container">
+  <navigation-bar title="选择角色" back="false" color="black" background="#FFF"></navigation-bar>
+
+  <view class="header">
+    <text class="welcome-text">欢迎使用智慧农业平台</text>
+    <text class="sub-text">请选择您要进入的角色端</text>
+  </view>
+
+  <view wx:if="{{userRoles.length > 0}}" class="section-title">我的角色</view>
+  <view class="role-list" wx:if="{{userRoles.length > 0}}">
+    <view
+      wx:for="{{userRoles}}"
+      wx:for-item="role"
+      wx:key="role"
+      class="role-item role-item-owned {{selectedRole === role ? 'role-item-selected' : ''}}"
+      data-rolecode="{{role}}"
+      bindtap="selectRole"
+    >
+      <view class="role-icon">
+        <image src="{{role === 'FARMER' ? '/assets/images/nonghu.jpg' : role === 'FLYER' ? '/assets/images/feishou.jpg' : '/assets/images/owner-icon.png'}}" mode="aspectFit"></image>
+      </view>
+      <view class="role-info">
+        <text class="role-name">{{role === 'FARMER' ? '农户' : role === 'FLYER' ? '飞手' : '机主'}}</text>
+        <text class="role-description">{{role === 'FARMER' ? '发布农业需求，查看巡检报告' : role === 'FLYER' ? '承接作业任务，上传巡检数据' : '管理无人机设备，查看租赁统计'}}</text>
+      </view>
+      <view class="role-check" wx:if="{{selectedRole === role}}">
+        <image src="/assets/images/check.png" mode="aspectFit"></image>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{availableRoles.length > 0}}" class="section-title">添加新角色</view>
+  <view class="role-list" wx:if="{{availableRoles.length > 0}}">
+    <view
+      wx:for="{{availableRoles}}"
+      wx:for-item="role"
+      wx:key="role"
+      class="role-item {{selectedRole === role ? 'role-item-selected' : ''}}"
+      data-rolecode="{{role}}"
+      bindtap="selectRole"
+    >
+      <view class="role-icon">
+        <image src="{{role === 'FARMER' ? '/assets/images/nonghu.jpg' : role === 'FLYER' ? '/assets/images/feishou.jpg' : '/assets/images/owner-icon.png'}}" mode="aspectFit"></image>
+      </view>
+      <view class="role-info">
+        <text class="role-name">{{role === 'FARMER' ? '农户' : role === 'FLYER' ? '飞手' : '机主'}}</text>
+        <text class="role-description">{{role === 'FARMER' ? '发布农业需求，查看巡检报告' : role === 'FLYER' ? '承接作业任务，上传巡检数据' : '管理无人机设备，查看租赁统计'}}</text>
+      </view>
+      <view class="role-check" wx:if="{{selectedRole === role}}">
+        <image src="/assets/images/check.png" mode="aspectFit"></image>
+      </view>
+    </view>
+  </view>
+
+  <view class="footer">
+    <button
+      class="enter-btn {{selectedRole ? 'enter-btn-active' : ''}}"
+      disabled="{{!selectedRole || loading}}"
+      bindtap="enterRoleHome"
+    >
+      {{loading ? '处理中...' : '进入系统'}}
+    </button>
+
+    <button
+      class="logout-btn"
+      type="warn"
+      bindtap="logout"
+    >
+      退出登录
+    </button>
+  </view>
+</view>

@@ -1,0 +1,108 @@
+<!--pages/chat/chat.wxml-->
+<view class="chat-container">
+  <!-- 自定义导航栏 -->
+  <navigation-bar back="true" title="{{otherUserName}}" color="black" background="#FFF"></navigation-bar>
+  
+  <!-- 聊天内容区域 -->
+  <scroll-view 
+    class="chat-scroll"
+    scroll-y
+    scroll-into-view="{{toView}}"
+    bindscrolltoupper="onReachBottom"
+    refresher-enabled
+    bindrefresherrefresh="onPullDownRefresh"
+  >
+    <!-- 加载更多提示 -->
+    <view class="load-more-tip" wx:if="{{loading && pageNum > 1}}">
+      <text>加载中...</text>
+    </view>
+    
+    <!-- 消息列表 -->
+    <view class="message-list">
+      <view 
+        wx:for="{{messages}}" 
+        wx:key="messageId"
+        id="msg-{{item.messageId}}"
+        class="message-item {{item.fromMySelf ? 'message-self' : 'message-other'}}"
+      >
+        <!-- 时间显示 -->
+        <view class="message-time-wrapper" wx:if="{{item.showTime}}">
+          <text class="message-time">{{item.formattedTime}}</text>
+        </view>
+        
+        <!-- 消息内容区域 -->
+        <view class="message-content-row">
+          <!-- 对方头像 -->
+          <view wx:if="{{!item.fromMySelf && item.senderAvatar}}">
+            <image 
+              class="avatar" 
+              src="{{item.senderAvatar}}"
+              mode="aspectFill"
+            ></image>
+          </view>
+          
+          <view class="message-bubble-wrapper">
+            <!-- 消息气泡 -->
+            <view 
+              class="message-bubble {{item.messageType === 2 ? 'image-bubble' : ''}}"
+            >
+              <!-- 文本消息 -->
+              <block wx:if="{{item.messageType === 1 || !item.messageType}}">
+                <text class="message-text">{{item.content}}</text>
+              </block>
+              
+              <!-- 图片消息 -->
+              <block wx:if="{{item.messageType === 2}}">
+                <image 
+                  class="message-image"
+                  src="{{item.content}}"
+                  mode="widthFix"
+                  lazy-load
+                ></image>
+              </block>
+            </view>
+          </view>
+          
+          <!-- 自己头像 -->
+          <view wx:if="{{item.fromMySelf && item.senderAvatar}}">
+            <image 
+              class="avatar" 
+              src="{{item.senderAvatar}}"
+              mode="aspectFill"
+            ></image>
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 底部占位 -->
+    <view class="bottom-placeholder"></view>
+  </scroll-view>
+  
+  <!-- 输入区域 -->
+  <view class="input-area">
+    <view class="input-toolbar">
+      <!-- 输入框 -->
+      <view class="input-wrapper">
+        <textarea 
+          class="message-input"
+          placeholder="输入消息..."
+          value="{{inputValue}}"
+          bindinput="onInputChange"
+          maxlength="500"
+          auto-height
+          show-confirm-bar="{{false}}"
+        />
+      </view>
+      
+      <!-- 发送按钮 -->
+      <button 
+        class="send-btn {{hasContent ? 'active' : ''}}" 
+        bindtap="sendMessage"
+        disabled="{{!hasContent}}"
+      >
+        <text>发送</text>
+      </button>
+    </view>
+  </view>
+</view>

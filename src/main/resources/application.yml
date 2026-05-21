@@ -1,0 +1,63 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/noperson?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&characterSetResults=UTF-8
+    username: root
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  redis:
+    host: localhost
+    port: 6379
+    password:
+    database: 0
+  
+  cloud:
+    alicloud:
+      access-key: ${ALICLOUD_ACCESS_KEY:your-access-key}
+      secret-key: ${ALICLOUD_SECRET_KEY:your-secret-key}
+      oss:
+        endpoint: oss-cn-beijing.aliyuncs.com
+        bucket-name: ljjproject 
+        region-id: oss-cn-beijing
+  
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: 8082
+  url: http://localhost:8082
+
+wechat:
+  miniapp:
+    appid: wx88f284b4eb30d813
+    secret: d1815a10d501cc507e8a43bebf6516b8
+
+alipay:
+  sandbox:
+    app-id: 2021006154602201
+    private-key: MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCIcILC0u08yrdSCw2HTIWrvpy0nN73EY7mPB2MkEdGKLWR8Hq3NxJu6tiPMJ8Wt+T8jr54Sg/AjbxMmIqUP9gIKB8QigzKGZnGN0xgQN2dXJrnqQhR7K3Fs0OMFb0/8hIKAVclUqL7E2QTrRSC+qc9LZxC0AnamA25pchCgMX2ytFDELx65xcc2kqDiYoi85Wzuae+I+MoeVdp5zTNU0UgEJ/DaecPw2WSDyPsdiUDMRE0AhUjnv1WEAmIjI1Omda9G2x4sFJTIHjalhddQKCdnget7sf/rb3kzRyVzhH1maUWIAV5PYcaQdTUP5W39WLrkYD+05/iN3MZPP1Ny9xtAgMBAAECggEAEILlICScdx3lH3Wc9oGpL4aKukS9qtKiI3Sk8szHA1OL3ZRnlWKBxZCAEpwEtKAegv3XSQFVdKzyW6aeJqCvSRVp5Pt/3rlIZbdtc7yF1TROvrgy/I8S3Hj8NKiw1Vs7GaDd5fNhK9dF5ies8sjYkkvBvEgm2SBLkOriGEIzMtFdO0f9eJhNQqIqC0fuGegZSjZt4J8CHOWvUaUL6LJAL/8J2llVZsMzLvIj77ddWiAdELZ21zHtBnRqjQT3eDANZEd7hjefE32JAgXMaqfwGr+WF5oQ/lf6NmDhRyAIUzAFQMrLH9hR03Cu6IdV6nNY91kDXvegqoHHXk5hJ27XlQKBgQDHbNQ23aCK2eYA09ZAE2nKtdZA1kpIhOb93QBMLtOTeqXnyNEfl/btRE/oh3AUiwogLlQDT58uHCQ8PFf5H0HCPnquURl+nDG0/snPBTV+HzWJNAG0WdGt0FbJ5BGdrB+Y7BJrOAelkQGmAWrU/Ywp2PxXCVsvS+2cIKBCSY2mKwKBgQCvJWA61rTIhwQEkFvd9zGiYB7bGzVplC5w8QzRYxGxYUUWQGixQd/WtpvsWXVTZiAwbC3Xi1kd4F3XYwJvSSZiiHoUYUQWhvrBrYydi1KK0+QwpaA8JOBF+S8YfwRKm8aIeXTdJbHnvciUhqVrGbh8OLRB0DBfu7/SQXkECU+TxwKBgGyiz1P4FX2uR8pJm9wZ9zZzKfz1/09T/tVqL8BQffdIB9qlHa6dROlpnjIonZjDSUfQlPmcxTUEJYUexjmymkrraD9PdJjxE27qoRsCVmqXK73LM+aAS2XpKW4frKz819WhPENmKVw7Cu/Ys87FNDaTuprbQO4Z6Z10dHjHwr8zAoGAJtgsQoBx8fN34ac+qLj1SiT1UvTy4KqbrjLX++xz9Ro0n13DmmSYx18Sr9WbXtbMltC3ThG6vxSO24E6/gGEQOAx6ykzV6eyH5hlEl/e+6lI970UD6LCFuLQHie1hPKNkqEVWSLOFS6TONWwBFPdBbfxypLo16KlRXV96HZELusCgYEAj0EF157jIPVM8n0dm/x+AUPGNtXX358hDPzuDUV26dR4NcwzATqvg8iYRsLDNp0bFz6KQ7ll3GicUlCyr1Qtaqgc6VcPA8KLY9++w/tF4EnS2er37YAOq87qgBYPkDJ1RSrK5s50rFDHbVPM0di2hDpyBuHxIdZwuiHDN2Awq4s=
+    public-key: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAiGQAY7OvbQj8Afc4keEDCl7LIWT9w+2mAJw7FMSjtDzQxT5s43dmd92c0j8k+hKv+2g0Zz4dvGLkGg/NSvw/V73ywQehYWnX0lu3GLZknMC4UT8umudSVNSe7t3ZzNx9FeUsiz5xF8ymjcjRyR8iZ1qWvcPPNzV06gpQwP14LKY8UM+fzWVomH8RKE1x/AplMcwYSyD9oB7b/+BbAEH4Ik19O1OW4snL2Dy2XSPmJu/sG2T9f+lb5fhZDkAjOWkUbQpFbfrVTgl044xGao5M7NjHJ6oQpHED/gcOjdX/w9hFImNbr2wBj72Q9g167ulmxaDa2yr11zOnM7rgnozIKQIDAQAB
+    gateway-url: https://openapi-sandbox.dl.alipaydev.com/gateway.do
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  mapper-locations: classpath*:mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: auto
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.cty.nopersonfinally: debug
+    org.springframework: warn
+    org.hibernate: warn
