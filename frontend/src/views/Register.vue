@@ -7,28 +7,45 @@
       <div class="decoration-circle circle-3"></div>
     </div>
     
-    <!-- 注册表单卡片 -->
-    <div class="login-card">
-      <div class="login-wrapper">
-        <!-- 登录头部 -->
-        <div class="login-header">
-          <div class="logo-container">
-            <div class="logo-icon">🚁</div>
-            <div class="logo-text">
-              <h1>无人机管理系统</h1>
-              <p>账号注册</p>
+        <!-- 注册表单卡片 -->
+        <div class="login-card">
+          <div class="login-wrapper">
+            <!-- 注册头部 -->
+            <div class="login-header">
+              <div class="logo-container">
+                <div class="logo-icon">🚁</div>
+                <div class="logo-text">
+                  <h1>农翼通</h1>
+                  <p>账号注册</p>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        
-        <!-- 注册表单 -->
-        <el-form 
-          :model="registerForm" 
-          :rules="rules" 
-          ref="registerFormRef" 
-          class="login-form"
-          :validate-on-rule-change="false"
-        >
+            
+            <!-- 角色选择 -->
+            <div class="role-selector">
+              <span class="role-label">选择注册角色</span>
+              <div class="role-buttons">
+                <button 
+                  v-for="role in roles" 
+                  :key="role.id"
+                  :class="['role-btn', { active: selectedRole === role.id }]"
+                  @click="selectedRole = role.id"
+                >
+                  <span class="role-icon">{{ role.icon }}</span>
+                  <span class="role-name">{{ role.name }}</span>
+                  <span class="role-desc">{{ role.desc }}</span>
+                </button>
+              </div>
+            </div>
+            
+            <!-- 注册表单 -->
+            <el-form 
+              :model="registerForm" 
+              :rules="rules" 
+              ref="registerFormRef" 
+              class="login-form"
+              :validate-on-rule-change="false"
+            >
           <div class="form-content">
             <!-- 手机号输入 -->
             <el-form-item prop="phone" class="form-item">
@@ -149,17 +166,26 @@
 </template>
 
 <script>
-import { ref, reactive, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
 export default {
   name: 'Register',
   setup() {
     const router = useRouter()
+    const route = useRoute()
     const registerFormRef = ref(null)
     const loading = ref(false)
     const focusField = ref('')
+    const selectedRole = ref('farmer') // 默认农户
+    
+    const roles = [
+      { id: 'farmer', name: '农户', icon: '🌾', desc: '发布作业需求' },
+      { id: 'flyer', name: '飞手', icon: '🚁', desc: '接单赚收益' },
+      { id: 'owner', name: '机主', icon: '🏭', desc: '共享闲置设备' }
+    ]
+    
     const errorFields = reactive({
       phone: false, 
       username: false, 
@@ -175,7 +201,16 @@ export default {
       realName: '',
       password: '',
       confirmPassword: '',
-      role: 'owner' // 默认机主角色
+      role: 'farmer'
+    })
+    
+    // 处理 URL 参数中的 role
+    onMounted(() => {
+      const roleFromUrl = route.query.role
+      if (roleFromUrl && ['farmer', 'flyer', 'owner'].includes(roleFromUrl)) {
+        selectedRole.value = roleFromUrl
+        registerForm.role = roleFromUrl
+      }
     })
     
     // 表单验证规则
@@ -231,6 +266,9 @@ export default {
     // 处理注册
     const handleRegister = async () => {
       try {
+        // 更新表单中的角色
+        registerForm.role = selectedRole.value
+        
         // 表单验证
         await registerFormRef.value.validate()
         
@@ -311,6 +349,8 @@ export default {
       loading,
       focusField,
       errorFields,
+      selectedRole,
+      roles,
       handleRegister,
       inputFocus,
       inputBlur
@@ -411,8 +451,78 @@ export default {
 /* 登录头部 */
 .login-header {
   text-align: center;
-  margin-bottom: 36px;
+  margin-bottom: 24px;
   position: relative;
+}
+
+/* 角色选择器 */
+.role-selector {
+  margin-bottom: 24px;
+}
+
+.role-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.role-buttons {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.role-btn {
+  flex: 1;
+  padding: 20px 16px;
+  background: linear-gradient(145deg, #f9fafb 0%, #ffffff 100%);
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.role-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+  border-color: #409EFF;
+}
+
+.role-btn.active {
+  background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(64, 158, 255, 0.05) 100%);
+  border-color: #409EFF;
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2);
+}
+
+.role-icon {
+  font-size: 32px;
+  margin-bottom: 4px;
+}
+
+.role-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.role-btn.active .role-name {
+  color: #409EFF;
+}
+
+.role-desc {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.role-btn.active .role-desc {
+  color: #6b7280;
 }
 
 .logo-container {

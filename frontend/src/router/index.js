@@ -191,6 +191,24 @@ const publicRoutes = [
     meta: { requiresAuth: false }
   },
   {
+    path: '/service-list',
+    name: 'ServiceList',
+    component: () => import('../views/ServiceList.vue'),
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/service-detail/:id',
+    name: 'ServiceDetail',
+    component: () => import('../views/ServiceDetail.vue'),
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/equipment-list',
+    name: 'EquipmentList',
+    component: () => import('../views/farmer/DemandList.vue'), // 临时用需求列表代替，后续可创建新页面
+    meta: { requiresAuth: false }
+  },
+  {
     path: '/test',
     name: 'Test',
     component: {
