@@ -189,7 +189,7 @@ export default {
         
         if (response.code === 200) {
           ElMessage.success('租借申请提交成功')
-          router.push('/rental-history')
+          router.push('/owner/rental-apply')
         } else {
           ElMessage.error(response.message || '提交失败')
         }

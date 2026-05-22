@@ -4,6 +4,8 @@ package com.cty.nopersonfinally.config;
 import com.cty.nopersonfinally.pojo.enums.ResultCode;
 import com.cty.nopersonfinally.utils.JWTUtil;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,15 +30,17 @@ import java.util.Collections;
 @EnableWebSecurity
 @EnableMethodSecurity // 启用方法级别的权限控制
 public class SecurityConfig {
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
+    
     @Autowired
     private JWTUtil jwtUtil;
-    @Autowired
+    
+    @Autowired(required = false)
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     // 构造方法注入依赖
-    public SecurityConfig(JWTUtil jwtUtil, JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(JWTUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
     /**
@@ -69,8 +73,8 @@ public class SecurityConfig {
                     config.setMaxAge(3600L);
                     return config;
                 }))
-                // 添加JWT过滤器
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                // 添加JWT过滤器（如果可用）
+                .addFilterBefore(jwtAuthenticationFilter != null ? jwtAuthenticationFilter : new JwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 // 配置URL访问权限
                 .authorizeHttpRequests(auth -> auth
                         // 允许OPTIONS请求通过
@@ -86,6 +90,8 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**", "/api/ws/**").permitAll() // 允许访问地图代理接口
                         .requestMatchers("/api/jwt/**").permitAll() // 允许访问JWT相关接口
                         .requestMatchers("/api/weather/**").permitAll() // 允许访问天气图片接口
+                        .requestMatchers("/api/uva-images/**").permitAll() // 允许访问UVA图片接口
+                        .requestMatchers("/UVAImages/**").permitAll() // 允许访问UVA图片资源
                         .requestMatchers("/upload/**", "/api/upload/**").permitAll() // 允许访问上传接口
                         .requestMatchers("/api/ai/**").permitAll() // 允许访问AI诊断接口
                         .requestMatchers("/api/announcement/**").permitAll() // 允许访问公告接口
@@ -114,9 +120,7 @@ public class SecurityConfig {
                             response.getWriter().write("{\"code\":" + ResultCode.FORBIDDEN.getCode()
                                     + ",\"msg\":\"" + ResultCode.FORBIDDEN.getMsg() + "\"}");
                         })
-                )
-                // 添加JWT过滤器
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                );
 
         return http.build();
     }

@@ -294,7 +294,7 @@ export default {
         
         ElMessage.success('登录成功，正在跳转...');
         setTimeout(() => {
-          router.push('/dashboard');
+          router.push(`/${selectedRole.value}/dashboard`);
         }, 1000);
       } catch (error) {
         console.error('登录失败:', error);

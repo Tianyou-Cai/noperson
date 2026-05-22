@@ -116,15 +116,15 @@ export default {
     }
     
     const goToDevices = () => {
-      router.push('/devices')
+      router.push('/owner/devices')
     }
     
     const goToAddDevice = () => {
-      router.push('/devices/add')
+      router.push('/owner/devices/add')
     }
     
     const goToWallet = () => {
-      router.push('/wallet')
+      router.push('/owner/wallet')
     }
     
     return {

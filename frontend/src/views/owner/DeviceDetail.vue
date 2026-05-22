@@ -60,10 +60,10 @@
 
       <!-- 操作按钮 -->
       <div class="action-buttons">
-        <el-button @click="router.push(`/device/${device.deviceId}/edit`)" type="primary">
+        <el-button @click="router.push(`/owner/device/${device.deviceId}/edit`)" type="primary">
           编辑设备
         </el-button>
-        <el-button @click="router.push('/devices')">
+        <el-button @click="router.push('/owner/devices')">
           返回列表
         </el-button>
       </div>

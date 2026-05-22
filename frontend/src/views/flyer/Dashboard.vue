@@ -1,127 +1,193 @@
 <template>
   <div class="dashboard flyer-dashboard">
-    <div class="dashboard-header">
-      <h1 class="dashboard-title">飞手仪表盘</h1>
-      <p class="dashboard-subtitle">欢迎回来，{{ userName }}！查看您的订单和收入概览</p>
+    <!-- 顶部导航 -->
+    <nav class="dashboard-navbar">
+      <div class="navbar-content">
+        <div class="navbar-left">
+          <div class="logo" @click="router.push('/')">
+            <span class="logo-icon">🚁</span>
+            <span class="logo-text">农翼通商城</span>
+          </div>
+        </div>
+        <div class="navbar-center">
+          <div class="search-box">
+            <input type="text" placeholder="搜索服务需求" class="search-input" />
+            <button class="search-btn">🔍</button>
+          </div>
+        </div>
+        <div class="navbar-right">
+          <button class="nav-btn" @click="router.push('/service-list')">服务市场</button>
+          <button class="nav-btn active">我的服务</button>
+          <button class="nav-btn" @click="router.push('/flyer/profile')">
+            <span class="avatar">👤</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 用户信息卡片 -->
+    <div class="user-card">
+      <div class="user-info">
+        <div class="user-avatar">✈️</div>
+        <div class="user-detail">
+          <h2 class="user-name">{{ userName }}</h2>
+          <p class="user-role">✈️ 飞手用户</p>
+        </div>
+      </div>
+      <div class="user-stats">
+        <div class="user-stat-item">
+          <span class="stat-value">{{ stats.completedOrders }}</span>
+          <span class="stat-label">已完成订单</span>
+        </div>
+        <div class="user-stat-item">
+          <span class="stat-value">{{ stats.rating }}</span>
+          <span class="stat-label">服务评分</span>
+        </div>
+        <div class="user-stat-item">
+          <span class="stat-value">¥{{ stats.totalEarnings }}</span>
+          <span class="stat-label">累计收入</span>
+        </div>
+      </div>
     </div>
-    
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon order-icon">📦</div>
-        <div class="stat-content">
-          <div class="stat-value">{{ stats.orderCount }}</div>
-          <div class="stat-label">总订单</div>
-        </div>
+
+    <!-- 快捷统计 -->
+    <div class="stats-section">
+      <div class="section-header">
+        <h3>服务数据概览</h3>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon pending-icon">⏳</div>
-        <div class="stat-content">
-          <div class="stat-value">{{ stats.acceptedCount }}</div>
-          <div class="stat-label">待执行</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon processing-icon">🚁</div>
-        <div class="stat-content">
-          <div class="stat-value">{{ stats.processingCount }}</div>
-          <div class="stat-label">进行中</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon earnings-icon">💰</div>
-        <div class="stat-content">
-          <div class="stat-value">¥{{ stats.totalEarnings }}</div>
-          <div class="stat-label">累计收入</div>
+      <div class="stats-grid">
+        <div 
+          v-for="stat in serviceStats" 
+          :key="stat.key"
+          :class="['stat-card', stat.key]"
+          @click="goToSection(stat.key)"
+        >
+          <div class="stat-icon">{{ stat.icon }}</div>
+          <div class="stat-content">
+            <div class="stat-value">{{ stat.count }}</div>
+            <div class="stat-label">{{ stat.label }}</div>
+          </div>
+          <div class="stat-arrow">→</div>
         </div>
       </div>
     </div>
-    
+
+    <!-- 主内容区域 -->
     <div class="dashboard-content">
-      <div class="recent-orders">
+      <!-- 待处理订单 -->
+      <div class="main-section">
         <div class="section-header">
-          <h2>最近订单</h2>
-          <el-button type="text" class="view-all-btn" @click="goToOrderList">查看全部 →</el-button>
+          <h3>待处理订单</h3>
+          <button class="view-all-btn" @click="goToOrders('pending')">查看全部 →</button>
         </div>
-        <el-table :data="recentOrders" border class="order-table">
-          <el-table-column prop="title" label="订单标题" min-width="200">
-            <template #default="scope">
-              <span class="order-title">{{ scope.row.title }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="farmer" label="农户" width="120" align="center">
-            <template #default="scope">
-              <span class="farmer-name">{{ scope.row.farmer }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="area" label="面积(亩)" width="100" align="center">
-            <template #default="scope">
-              <span class="area-value">{{ scope.row.area }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="price" label="金额" width="100" align="right">
-            <template #default="scope">
-              <span class="price-value">¥{{ scope.row.price }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="status" label="状态" width="100" align="center">
-            <template #default="scope">
-              <el-tag :type="getStatusType(scope.row.status)" size="small">
-                {{ getStatusLabel(scope.row.status) }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="120">
-            <template #default="scope">
-              <el-button type="text" size="small" @click="goToDetail(scope.row.id)">查看详情</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-      </div>
-      
-      <div class="quick-actions">
-        <div class="section-header">
-          <h2>快捷操作</h2>
-        </div>
-        <div class="action-grid">
-          <div class="action-card" @click="goToAcceptOrder">
-            <div class="action-icon">🤝</div>
-            <div class="action-title">接单中心</div>
-            <div class="action-desc">浏览并接受需求</div>
-          </div>
-          <div class="action-card" @click="goToMyOrders">
-            <div class="action-icon">📋</div>
-            <div class="action-title">我的订单</div>
-            <div class="action-desc">查看订单状态</div>
-          </div>
-          <div class="action-card" @click="goToEquipment">
-            <div class="action-icon">🔧</div>
-            <div class="action-title">设备租用</div>
-            <div class="action-desc">租用无人机设备</div>
-          </div>
-          <div class="action-card" @click="goToQualification">
-            <div class="action-icon">📝</div>
-            <div class="action-title">资质管理</div>
-            <div class="action-desc">管理资质认证</div>
-          </div>
-        </div>
-        
-        <div class="earnings-summary">
-          <div class="earnings-header">
-            <h3>本月收入</h3>
-            <span class="earnings-month">2024年1月</span>
-          </div>
-          <div class="earnings-amount">¥{{ monthlyEarnings }}</div>
-          <div class="earnings-chart">
-            <div class="chart-bar">
-              <div class="bar-fill" style="height: 75%"></div>
+        <div class="orders-list">
+          <div v-for="order in pendingOrders" :key="order.id" class="order-card">
+            <div class="order-header">
+              <div class="order-id">订单号: {{ order.id }}</div>
+              <span :class="['order-status', order.status]">{{ getStatusLabel(order.status) }}</span>
             </div>
-            <div class="chart-labels">
-              <span>1月</span>
-              <span>2月</span>
-              <span>3月</span>
-              <span>4月</span>
-              <span>5月</span>
-              <span>6月</span>
+            <div class="order-content">
+              <div class="order-info">
+                <h4 class="order-title">{{ order.title }}</h4>
+                <div class="order-meta">
+                  <span class="meta-item">📍 {{ order.location }}</span>
+                  <span class="meta-item">📅 {{ order.date }}</span>
+                  <span class="meta-item">🌾 {{ order.crop }}</span>
+                </div>
+                <div class="order-detail">
+                  <span>作业面积: {{ order.area }} 亩</span>
+                  <span>服务类型: {{ order.serviceType }}</span>
+                </div>
+              </div>
+              <div class="order-price">
+                <span class="price-label">订单金额</span>
+                <span class="price-value">¥{{ order.price }}</span>
+              </div>
+            </div>
+            <div class="order-actions">
+              <button class="action-btn primary" @click="acceptOrder(order.id)">接单</button>
+              <button class="action-btn" @click="rejectOrder(order.id)">拒绝</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 侧边栏 -->
+      <div class="sidebar">
+        <!-- 快捷操作 -->
+        <div class="quick-actions">
+          <h3>快捷操作</h3>
+          <div class="actions-grid">
+            <div class="action-card" @click="goToPublishService">
+              <div class="action-icon">📤</div>
+              <div class="action-content">
+                <span class="action-title">发布服务</span>
+                <span class="action-desc">发布您的植保服务</span>
+              </div>
+            </div>
+            <div class="action-card" @click="goToServiceList">
+              <div class="action-icon">📋</div>
+              <div class="action-content">
+                <span class="action-title">我的服务</span>
+                <span class="action-desc">管理服务列表</span>
+              </div>
+            </div>
+            <div class="action-card" @click="goToEarnings">
+              <div class="action-icon">💰</div>
+              <div class="action-content">
+                <span class="action-title">我的收入</span>
+                <span class="action-desc">查看收益明细</span>
+              </div>
+            </div>
+            <div class="action-card" @click="goToReviews">
+              <div class="action-icon">⭐</div>
+              <div class="action-content">
+                <span class="action-title">用户评价</span>
+                <span class="action-desc">{{ stats.rating }}分好评</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 进行中的订单 -->
+        <div class="ongoing-section">
+          <h3>进行中的订单</h3>
+          <div class="ongoing-list">
+            <div v-for="order in ongoingOrders" :key="order.id" class="ongoing-item">
+              <div class="ongoing-info">
+                <h4 class="ongoing-title">{{ order.title }}</h4>
+                <span class="ongoing-location">{{ order.location }}</span>
+              </div>
+              <div class="ongoing-progress">
+                <div class="progress-bar">
+                  <div class="progress-fill" :style="{ width: order.progress + '%' }"></div>
+                </div>
+                <span class="progress-text">{{ order.progress }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 服务等级 -->
+        <div class="level-section">
+          <div class="level-card">
+            <div class="level-header">
+              <span class="level-icon">🏆</span>
+              <span class="level-title">飞手等级</span>
+            </div>
+            <div class="level-content">
+              <div class="level-name">{{ userLevel }}</div>
+              <div class="level-progress">
+                <div class="level-bar">
+                  <div class="level-fill" :style="{ width: levelProgress + '%' }"></div>
+                </div>
+                <span class="level-text">{{ levelProgress }}% 升至下一等级</span>
+              </div>
+            </div>
+            <div class="level-benefits">
+              <div class="benefit-item">优先接单权</div>
+              <div class="benefit-item">服务曝光+20%</div>
+              <div class="benefit-item">专属客服</div>
             </div>
           </div>
         </div>
@@ -134,6 +200,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../../store/user'
+import { ElMessage } from 'element-plus'
 
 export default {
   name: 'FlyerDashboard',
@@ -142,39 +209,69 @@ export default {
     const userStore = useUserStore()
     
     const userName = computed(() => {
-      return userStore.userInfo?.username || userStore.userInfo?.name || '飞手'
+      return userStore.userInfo?.username || userStore.userInfo?.name || '飞手用户'
     })
+    
+    const userLevel = ref('金牌飞手')
+    const levelProgress = ref(75)
     
     const stats = ref({
-      orderCount: 28,
-      acceptedCount: 5,
-      processingCount: 2,
-      totalEarnings: 15680
+      completedOrders: 86,
+      rating: 4.9,
+      totalEarnings: 32680
     })
     
-    const monthlyEarnings = ref(3280)
-    
-    const recentOrders = ref([
-      { id: 1, title: '小麦喷洒作业', farmer: '王农户', area: 200, price: 1200, status: 'processing', createTime: '2024-01-20 14:30:00' },
-      { id: 2, title: '玉米病虫害防治', farmer: '李农户', area: 150, price: 900, status: 'accepted', createTime: '2024-01-19 09:15:00' },
-      { id: 3, title: '水稻施肥作业', farmer: '张农户', area: 300, price: 1800, status: 'completed', createTime: '2024-01-18 16:45:00' },
-      { id: 4, title: '果园农药喷洒', farmer: '赵农户', area: 80, price: 480, status: 'accepted', createTime: '2024-01-17 10:20:00' },
-      { id: 5, title: '棉花脱叶剂喷洒', farmer: '孙农户', area: 250, price: 1500, status: 'completed', createTime: '2024-01-16 15:30:00' }
+    const serviceStats = ref([
+      { key: 'pending', label: '待接单', count: 5, icon: '⏳' },
+      { key: 'processing', label: '进行中', count: 2, icon: '🚁' },
+      { key: 'completed', label: '已完成', count: 86, icon: '✅' },
+      { key: 'reviews', label: '待评价', count: 3, icon: '⭐' }
     ])
     
-    const getStatusType = (status) => {
-      const types = {
-        accepted: 'warning',
-        processing: 'primary',
-        completed: 'success',
-        cancelled: 'danger'
+    const pendingOrders = ref([
+      { 
+        id: 'ORD20240120005', 
+        title: '小麦病虫害防治', 
+        location: '山东济南槐荫区',
+        date: '2024-01-22',
+        crop: '小麦',
+        area: 150,
+        serviceType: '农药喷洒',
+        price: 2250,
+        status: 'pending'
+      },
+      { 
+        id: 'ORD20240120006', 
+        title: '玉米施肥作业', 
+        location: '河南郑州金水区',
+        date: '2024-01-23',
+        crop: '玉米',
+        area: 200,
+        serviceType: '叶面肥喷洒',
+        price: 3600,
+        status: 'pending'
+      },
+      { 
+        id: 'ORD20240120007', 
+        title: '果园农药喷洒', 
+        location: '陕西西安未央区',
+        date: '2024-01-24',
+        crop: '苹果',
+        area: 80,
+        serviceType: '病虫害防治',
+        price: 2000,
+        status: 'pending'
       }
-      return types[status] || 'info'
-    }
+    ])
+    
+    const ongoingOrders = ref([
+      { id: 'ORD20240119002', title: '玉米病虫害防治', location: '河南郑州', progress: 65 },
+      { id: 'ORD20240118008', title: '水稻施肥作业', location: '江苏徐州', progress: 30 }
+    ])
     
     const getStatusLabel = (status) => {
       const labels = {
-        accepted: '待执行',
+        pending: '待接单',
         processing: '进行中',
         completed: '已完成',
         cancelled: '已取消'
@@ -182,28 +279,44 @@ export default {
       return labels[status] || status
     }
     
-    const goToOrderList = () => {
-      router.push('/order-list')
+    const goToSection = (key) => {
+      if (key === 'pending') {
+        router.push('/flyer/order-list?status=pending')
+      } else if (key === 'processing') {
+        router.push('/flyer/order-list?status=processing')
+      } else if (key === 'completed') {
+        router.push('/flyer/order-list?status=completed')
+      } else if (key === 'reviews') {
+        router.push('/flyer/reviews')
+      }
     }
     
-    const goToDetail = (id) => {
-      router.push(`/order-detail/${id}`)
+    const goToOrders = (status) => {
+      router.push(`/flyer/order-list?status=${status}`)
     }
     
-    const goToAcceptOrder = () => {
-      router.push('/accept-order')
+    const goToPublishService = () => {
+      router.push('/flyer/accept-order')
     }
     
-    const goToMyOrders = () => {
-      router.push('/my-orders')
+    const goToServiceList = () => {
+      router.push('/flyer/my-orders')
     }
     
-    const goToEquipment = () => {
-      router.push('/equipment')
+    const goToEarnings = () => {
+      router.push('/flyer/wallet')
     }
     
-    const goToQualification = () => {
-      router.push('/qualification')
+    const goToReviews = () => {
+      router.push('/flyer/reviews')
+    }
+    
+    const acceptOrder = (orderId) => {
+      ElMessage.success(`订单 ${orderId} 已接单`)
+    }
+    
+    const rejectOrder = (orderId) => {
+      ElMessage.info(`订单 ${orderId} 已拒绝`)
     }
     
     onMounted(() => {
@@ -212,17 +325,21 @@ export default {
     
     return {
       userName,
+      userLevel,
+      levelProgress,
       stats,
-      monthlyEarnings,
-      recentOrders,
-      getStatusType,
+      serviceStats,
+      pendingOrders,
+      ongoingOrders,
       getStatusLabel,
-      goToOrderList,
-      goToDetail,
-      goToAcceptOrder,
-      goToMyOrders,
-      goToEquipment,
-      goToQualification
+      goToSection,
+      goToOrders,
+      goToPublishService,
+      goToServiceList,
+      goToEarnings,
+      goToReviews,
+      acceptOrder,
+      rejectOrder
     }
   }
 }
@@ -230,48 +347,225 @@ export default {
 
 <style scoped>
 .dashboard {
-  padding: 24px;
-  min-height: 100%;
+  min-height: 100vh;
+  background: #f8f9fa;
 }
 
-.dashboard-header {
-  margin-bottom: 32px;
+.dashboard-navbar {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.dashboard-title {
-  font-size: 28px;
+.navbar-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.logo-icon {
+  font-size: 32px;
+}
+
+.logo-text {
+  font-size: 22px;
   font-weight: 700;
-  color: #1f2937;
+  color: #3b82f6;
+}
+
+.navbar-center {
+  flex: 1;
+  max-width: 500px;
+  margin: 0 40px;
+}
+
+.search-box {
+  display: flex;
+  background: #f3f4f6;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  padding: 10px 16px;
+  font-size: 14px;
+  background: transparent;
+  outline: none;
+}
+
+.search-btn {
+  padding: 10px 20px;
+  background: #3b82f6;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.navbar-right {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.nav-btn {
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  color: #4b5563;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.nav-btn:hover {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.nav-btn.active {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.15);
+  font-weight: 600;
+}
+
+.avatar {
+  font-size: 20px;
+}
+
+.user-card {
+  max-width: 1400px;
+  margin: 24px auto;
+  padding: 0 24px;
+}
+
+.user-card {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 16px;
+  padding: 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #fff;
+}
+
+.user-info {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.user-avatar {
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+}
+
+.user-name {
+  font-size: 24px;
+  font-weight: 700;
   margin: 0 0 8px 0;
 }
 
-.dashboard-subtitle {
+.user-role {
   font-size: 14px;
-  color: #6b7280;
+  opacity: 0.9;
   margin: 0;
+}
+
+.user-stats {
+  display: flex;
+  gap: 48px;
+}
+
+.user-stat-item {
+  text-align: center;
+}
+
+.user-stat-item .stat-value {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.user-stat-item .stat-label {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.stats-section {
+  max-width: 1400px;
+  margin: 0 auto 24px;
+  padding: 0 24px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.view-all-btn {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  margin-bottom: 32px;
+  gap: 16px;
 }
 
 .stat-card {
   background: #fff;
-  border-radius: 16px;
-  padding: 24px;
+  border-radius: 12px;
+  padding: 20px;
   display: flex;
   align-items: center;
   gap: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s ease;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
 .stat-icon {
@@ -284,138 +578,253 @@ export default {
   font-size: 24px;
 }
 
-.order-icon {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-}
-
-.pending-icon {
+.stat-card.pending .stat-icon {
   background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
 
-.processing-icon {
+.stat-card.processing .stat-icon {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.stat-card.completed .stat-icon {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
-.earnings-icon {
-  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+.stat-card.reviews .stat-icon {
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
 }
 
 .stat-content {
   flex: 1;
 }
 
-.stat-value {
-  font-size: 28px;
+.stat-content .stat-value {
+  font-size: 24px;
   font-weight: 700;
   color: #1f2937;
 }
 
-.stat-label {
+.stat-content .stat-label {
   font-size: 13px;
   color: #6b7280;
-  margin-top: 4px;
+}
+
+.stat-arrow {
+  color: #9ca3af;
+  font-size: 18px;
 }
 
 .dashboard-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 24px;
 }
 
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.section-header h2 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0;
-}
-
-.view-all-btn {
-  color: #3b82f6;
-  font-size: 13px;
-  padding: 0;
-}
-
-.view-all-btn:hover {
-  color: #2563eb;
-}
-
-.recent-orders {
+.main-section {
   background: #fff;
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.order-table {
-  width: 100%;
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.order-title {
-  font-weight: 500;
-  color: #1f2937;
+.order-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.3s;
 }
 
-.farmer-name {
+.order-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.order-id {
+  font-size: 13px;
   color: #6b7280;
 }
 
-.area-value {
+.order-status {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.order-status.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.order-status.processing {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.order-status.completed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.order-content {
+  display: flex;
+  justify-content: space-between;
+}
+
+.order-info {
+  flex: 1;
+}
+
+.order-title {
+  font-size: 15px;
   font-weight: 600;
-  color: #3b82f6;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+}
+
+.order-meta {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.meta-item {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.order-detail {
+  display: flex;
+  gap: 16px;
+}
+
+.order-detail span {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.order-price {
+  text-align: right;
+}
+
+.price-label {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
 }
 
 .price-value {
-  font-weight: 600;
-  color: #10b981;
+  font-size: 24px;
+  font-weight: 700;
+  color: #ef4444;
 }
 
-.quick-actions {
+.order-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.action-btn {
+  padding: 8px 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: #fff;
+  color: #4b5563;
+}
+
+.action-btn:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.action-btn.primary {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+}
+
+.action-btn.primary:hover {
+  background: #2563eb;
+}
+
+.sidebar {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.action-grid {
+.quick-actions {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.quick-actions h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 16px 0;
+}
+
+.actions-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 
 .action-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+  gap: 12px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 12px;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s ease;
+  transition: all 0.3s;
 }
 
 .action-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  background: #eff6ff;
+  transform: translateY(-2px);
 }
 
 .action-icon {
-  font-size: 32px;
-  margin-bottom: 12px;
+  font-size: 28px;
+}
+
+.action-content {
+  display: flex;
+  flex-direction: column;
 }
 
 .action-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: #1f2937;
-  margin-bottom: 4px;
 }
 
 .action-desc {
@@ -423,62 +832,153 @@ export default {
   color: #9ca3af;
 }
 
-.earnings-summary {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+.ongoing-section {
+  background: #fff;
   border-radius: 16px;
-  padding: 24px;
-  color: #fff;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.earnings-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.earnings-header h3 {
+.ongoing-section h3 {
   font-size: 16px;
   font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 16px 0;
+}
+
+.ongoing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ongoing-item {
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.ongoing-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.ongoing-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
   margin: 0;
 }
 
-.earnings-month {
-  font-size: 13px;
-  opacity: 0.8;
+.ongoing-location {
+  font-size: 12px;
+  color: #6b7280;
 }
 
-.earnings-amount {
-  font-size: 36px;
-  font-weight: 700;
-  margin-bottom: 20px;
-}
-
-.earnings-chart {
+.ongoing-progress {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 8px;
 }
 
-.chart-bar {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  height: 60px;
-}
-
-.bar-fill {
+.progress-bar {
   flex: 1;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #3b82f6;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.progress-text {
+  font-size: 12px;
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.level-section {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.level-card {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border-radius: 12px;
+  padding: 20px;
+  color: #fff;
+}
+
+.level-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.level-icon {
+  font-size: 24px;
+}
+
+.level-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.level-content {
+  margin-bottom: 16px;
+}
+
+.level-name {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.level-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.level-bar {
+  flex: 1;
+  height: 8px;
   background: rgba(255, 255, 255, 0.3);
   border-radius: 4px;
-  transition: height 0.5s ease;
+  overflow: hidden;
 }
 
-.chart-labels {
+.level-fill {
+  height: 100%;
+  background: #fff;
+  border-radius: 4px;
+}
+
+.level-text {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.level-benefits {
   display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  opacity: 0.7;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.benefit-item {
+  font-size: 13px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
 }
 
 @media (max-width: 1024px) {
@@ -489,21 +989,59 @@ export default {
   .dashboard-content {
     grid-template-columns: 1fr;
   }
+  
+  .sidebar {
+    order: -1;
+  }
 }
 
 @media (max-width: 768px) {
-  .dashboard {
-    padding: 16px;
+  .navbar-center {
+    display: none;
+  }
+  
+  .navbar-right {
+    gap: 8px;
+  }
+  
+  .nav-btn {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+  
+  .user-card {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+  
+  .user-info {
+    flex-direction: column;
+  }
+  
+  .user-stats {
+    gap: 24px;
   }
   
   .stats-grid {
     grid-template-columns: 1fr;
   }
   
-  .action-grid {
+  .actions-grid {
     grid-template-columns: 1fr;
   }
   
-  .dashboard-title {
-    font-size: 24px;
+  .order-content {
+    flex-direction: column;
+    gap: 12px;
   }
+  
+  .order-price {
+    text-align: left;
+  }
+  
+  .order-actions {
+    justify-content: flex-start;
+  }
+}
+</style>

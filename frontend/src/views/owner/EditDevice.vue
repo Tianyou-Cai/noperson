@@ -223,7 +223,7 @@ export default {
          }
       } catch (error) {
         this.$message.error('获取设备详情失败');
-        this.$router.push('/devices');
+        this.$router.push('/owner/devices');
       } finally {
         this.loading = false;
       }
@@ -308,7 +308,7 @@ export default {
             // API调用成功
             console.log('设备更新成功');
             this.$message.success('设备更新成功');
-            this.$router.push('/devices');
+            this.$router.push('/owner/devices');
           } catch (error) {
             this.$message.error('更新失败，请重试');
           } finally {
@@ -320,7 +320,7 @@ export default {
     
     // 取消操作
     handleCancel() {
-      this.$router.push('/devices');
+      this.$router.push('/owner/devices');
     }
   }
 }

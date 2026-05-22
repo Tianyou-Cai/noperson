@@ -1,313 +1,262 @@
 <template>
   <div class="equipment-page">
-    <div class="page-header">
-      <h1 class="page-title">设备租用</h1>
-      <p class="page-subtitle">租用无人机设备，满足作业需求</p>
-    </div>
-    
-    <div class="filter-bar">
-      <div class="filter-group">
-        <el-select v-model="filter.type" placeholder="设备类型" class="filter-select">
-          <el-option label="全部类型" value="" />
-          <el-option label="植保无人机" value="crop" />
-          <el-option label="测绘无人机" value="survey" />
-          <el-option label="巡检无人机" value="inspection" />
-        </el-select>
-      </div>
-      <div class="filter-group">
-        <el-select v-model="filter.status" placeholder="设备状态" class="filter-select">
-          <el-option label="全部状态" value="" />
-          <el-option label="可租用" value="available" />
-          <el-option label="租用中" value="rented" />
-        </el-select>
-      </div>
-      <div class="filter-group">
-        <el-input 
-          v-model="filter.keyword" 
-          placeholder="搜索设备名称" 
-          class="search-input"
-          prefix-icon="Search"
-        />
-      </div>
-      <el-button type="primary" @click="handleSearch" class="search-btn">搜索</el-button>
-    </div>
-    
-    <div class="equipment-grid">
-      <div 
-        v-for="equipment in equipmentList" 
-        :key="equipment.id" 
-        class="equipment-card"
-        :class="{ 'equipment-card--available': equipment.status === 'available' }"
-      >
-        <div class="equipment-image">
-          <img :src="equipment.image" :alt="equipment.name" />
-          <div class="equipment-badge" :class="equipment.status">
-            {{ equipment.status === 'available' ? '可租用' : '租用中' }}
+    <!-- 顶部导航 -->
+    <nav class="page-navbar">
+      <div class="navbar-content">
+        <div class="navbar-left">
+          <div class="logo" @click="router.push('/')">
+            <span class="logo-icon">🚁</span>
+            <span class="logo-text">农翼通商城</span>
           </div>
         </div>
-        <div class="equipment-info">
-          <h3 class="equipment-name">{{ equipment.name }}</h3>
-          <p class="equipment-desc">{{ equipment.description }}</p>
-          <div class="equipment-specs">
-            <div class="spec-item">
-              <span class="spec-icon">⚙️</span>
-              <span>{{ equipment.type }}</span>
-            </div>
-            <div class="spec-item">
-              <span class="spec-icon">📦</span>
-              <span>{{ equipment.weight }}kg</span>
-            </div>
-            <div class="spec-item">
-              <span class="spec-icon">⏱️</span>
-              <span>{{ equipment.duration }}min</span>
-            </div>
+        <div class="navbar-center">
+          <div class="search-box">
+            <input type="text" placeholder="搜索设备" class="search-input" />
+            <button class="search-btn">🔍</button>
           </div>
-          <div class="equipment-price">
-            <span class="price-label">租金</span>
-            <span class="price-value">{{ equipment.price }}</span>
-            <span class="price-unit">/天</span>
-          </div>
-          <el-button 
-            type="primary" 
-            class="rent-btn"
-            :disabled="equipment.status !== 'available'"
-            @click="handleRent(equipment)"
-          >
-            {{ equipment.status === 'available' ? '立即租用' : '已租用' }}
-          </el-button>
+        </div>
+        <div class="navbar-right">
+          <button class="nav-btn" @click="router.push('/service-list')">服务市场</button>
+          <button class="nav-btn active">租设备</button>
+          <button class="nav-btn" @click="router.push('/flyer/dashboard')">我的</button>
         </div>
       </div>
-    </div>
-    
-    <div class="pagination-container">
-      <el-pagination
-        v-model:current-page="pagination.currentPage"
-        v-model:page-size="pagination.pageSize"
-        :total="pagination.total"
-        :page-sizes="[10, 20, 30]"
-        layout="total, sizes, prev, pager, next, jumper"
-        class="pagination"
-      />
-    </div>
-    
-    <el-dialog title="租用设备" v-model="rentDialogVisible" width="480px">
-      <div class="rent-form">
-        <div class="rent-equipment-info">
-          <img :src="selectedEquipment?.image" :alt="selectedEquipment?.name" class="rent-image" />
-          <div class="rent-equipment-detail">
-            <h3>{{ selectedEquipment?.name }}</h3>
-            <p>{{ selectedEquipment?.description }}</p>
-            <div class="rent-price">
-              <span class="rent-price-label">租金：</span>
-              <span class="rent-price-value">{{ selectedEquipment?.price }}</span>
-              <span class="rent-price-unit">/天</span>
-            </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="page-content">
+      <!-- 筛选区域 -->
+      <div class="filter-section">
+        <div class="filter-header">
+          <h2>设备租赁市场</h2>
+          <p>浏览并租赁机主的无人机设备</p>
+        </div>
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>设备类型</label>
+            <select v-model="filters.type" class="filter-select">
+              <option value="">全部类型</option>
+              <option value="spray">植保无人机</option>
+              <option value="survey">测绘无人机</option>
+              <option value="inspection">检测无人机</option>
+            </select>
           </div>
+          <div class="filter-group">
+            <label>价格区间</label>
+            <select v-model="filters.priceRange" class="filter-select">
+              <option value="">不限</option>
+              <option value="0-200">¥200以下</option>
+              <option value="200-300">¥200-300</option>
+              <option value="300-500">¥300-500</option>
+              <option value="500+">¥500以上</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>排序方式</label>
+            <select v-model="filters.sort" class="filter-select">
+              <option value="default">默认排序</option>
+              <option value="price-asc">价格从低到高</option>
+              <option value="price-desc">价格从高到低</option>
+              <option value="rating">评分最高</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 设备列表 -->
+      <div class="equipment-list">
+        <div class="list-header">
+          <span class="result-count">共找到 {{ filteredEquipment.length }} 个设备</span>
         </div>
         
-        <el-form :model="rentForm" :rules="rentRules" ref="rentFormRef" class="form-content">
-          <el-form-item prop="startDate" label="租用开始日期">
-            <el-date-picker
-              v-model="rentForm.startDate"
-              type="date"
-              placeholder="选择开始日期"
-              class="date-picker"
-            />
-          </el-form-item>
-          
-          <el-form-item prop="endDate" label="租用结束日期">
-            <el-date-picker
-              v-model="rentForm.endDate"
-              type="date"
-              placeholder="选择结束日期"
-              class="date-picker"
-            />
-          </el-form-item>
-          
-          <el-form-item prop="purpose" label="租用用途">
-            <el-select v-model="rentForm.purpose" placeholder="请选择用途">
-              <el-option label="农业植保" value="crop" />
-              <el-option label="土地测绘" value="survey" />
-              <el-option label="电力巡检" value="inspection" />
-              <el-option label="其他" value="other" />
-            </el-select>
-          </el-form-item>
-          
-          <el-form-item prop="remark" label="备注">
-            <el-input
-              v-model="rentForm.remark"
-              type="textarea"
-              placeholder="请输入备注信息"
-              rows="3"
-            />
-          </el-form-item>
-        </el-form>
+        <div v-if="filteredEquipment.length === 0" class="empty-state">
+          <div class="empty-icon">🚁</div>
+          <p>暂无符合条件的设备</p>
+        </div>
+
+        <div v-else class="equipment-grid">
+          <div v-for="equipment in filteredEquipment" :key="equipment.id" class="equipment-card">
+            <div class="card-image">
+              <img :src="equipment.image" :alt="equipment.name" />
+              <div class="card-tags">
+                <span v-if="equipment.isCertified" class="tag certified">✓ 认证</span>
+                <span v-if="equipment.isHot" class="tag hot">🔥 热门</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <h3 class="card-title">{{ equipment.name }}</h3>
+              <div class="card-specs">
+                <span class="spec-item">{{ equipment.model }}</span>
+                <span class="spec-item">{{ equipment.type }}</span>
+              </div>
+              <div class="card-meta">
+                <span class="meta-item">📍 {{ equipment.location }}</span>
+                <span class="meta-item">🏢 {{ equipment.owner }}</span>
+              </div>
+              <div class="card-rating">
+                <span class="stars">⭐⭐⭐⭐⭐</span>
+                <span class="rating-value">{{ equipment.rating }}</span>
+                <span class="rating-count">({{ equipment.reviewCount }}条评价)</span>
+              </div>
+            </div>
+            <div class="card-footer">
+              <div class="price-info">
+                <span class="currency">¥</span>
+                <span class="price">{{ equipment.price }}</span>
+                <span class="unit">/{{ equipment.unit }}</span>
+              </div>
+              <div class="card-actions">
+                <button class="btn-contact" @click="contactOwner(equipment)">联系机主</button>
+                <button class="btn-rent" @click="rentEquipment(equipment)">立即租赁</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      
-      <template #footer>
-        <el-button @click="rentDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitRent">确认租用</el-button>
-      </template>
-    </el-dialog>
+
+      <!-- 分页 -->
+      <div class="pagination">
+        <button class="page-btn" :disabled="currentPage === 1">上一页</button>
+        <span class="page-info">第 {{ currentPage }} / {{ totalPages }} 页</span>
+        <button class="page-btn" :disabled="currentPage === totalPages">下一页</button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
 export default {
   name: 'FlyerEquipment',
   setup() {
-    const filter = reactive({
+    const router = useRouter()
+    
+    const currentPage = ref(1)
+    const totalPages = ref(3)
+    
+    const filters = reactive({
       type: '',
-      status: '',
-      keyword: ''
+      priceRange: '',
+      sort: 'default'
     })
-    
-    const pagination = reactive({
-      currentPage: 1,
-      pageSize: 10,
-      total: 24
-    })
-    
-    const rentDialogVisible = ref(false)
-    const selectedEquipment = ref(null)
-    const rentFormRef = ref(null)
-    
-    const rentForm = reactive({
-      startDate: '',
-      endDate: '',
-      purpose: '',
-      remark: ''
-    })
-    
-    const rentRules = {
-      startDate: [{ required: true, message: '请选择开始日期', trigger: 'change' }],
-      endDate: [{ required: true, message: '请选择结束日期', trigger: 'change' }],
-      purpose: [{ required: true, message: '请选择租用用途', trigger: 'change' }]
-    }
     
     const equipmentList = ref([
       {
         id: 1,
-        name: 'DJI Mavic 3',
-        description: '专业级航拍无人机，配备全画幅相机，适合高精度测绘任务',
-        type: '测绘无人机',
-        weight: '0.8',
-        duration: '46',
-        price: '500',
-        status: 'available',
-        image: 'https://neeko-copilot.bytedance.net/api/text2image?prompt=DJI%20Mavic%203%20drone%20professional%20photography%20white%20background&image_size=landscape_4_3'
+        name: '大疆 T40 植保无人机',
+        model: 'DJI T40',
+        type: '植保无人机',
+        image: 'https://picsum.photos/300/200?random=1',
+        price: 280,
+        unit: '小时',
+        location: '山东济南',
+        owner: '丰收获服合作社',
+        isCertified: true,
+        isHot: true,
+        rating: 4.9,
+        reviewCount: 128
       },
       {
         id: 2,
-        name: 'DJI Agras T40',
-        description: '农业植保无人机，大容量药箱，高效喷洒作业',
+        name: '极飞 P80 农业无人机',
+        model: 'XAIRCRAFT P80',
         type: '植保无人机',
-        weight: '40',
-        duration: '30',
-        price: '1500',
-        status: 'available',
-        image: 'https://neeko-copilot.bytedance.net/api/text2image?prompt=DJI%20Agras%20T40%20agricultural%20drone%20sprayer%20white%20background&image_size=landscape_4_3'
+        image: 'https://picsum.photos/300/200?random=2',
+        price: 320,
+        unit: '小时',
+        location: '河南郑州',
+        owner: '惠农植保中心',
+        isCertified: true,
+        isHot: false,
+        rating: 4.8,
+        reviewCount: 86
       },
       {
         id: 3,
-        name: 'Autel EVO II Pro',
-        description: '高性能航拍无人机，6K高清视频录制',
-        type: '测绘无人机',
-        weight: '1.1',
-        duration: '40',
-        price: '450',
-        status: 'rented',
-        image: 'https://neeko-copilot.bytedance.net/api/text2image?prompt=Autel%20EVO%20II%20Pro%20drone%20professional%20white%20background&image_size=landscape_4_3'
+        name: '大疆 T20P 无人机',
+        model: 'DJI T20P',
+        type: '植保无人机',
+        image: 'https://picsum.photos/300/200?random=3',
+        price: 220,
+        unit: '小时',
+        location: '江苏徐州',
+        owner: '天宇农业服务',
+        isCertified: false,
+        isHot: true,
+        rating: 4.7,
+        reviewCount: 65
       },
       {
         id: 4,
-        name: 'DJI Phantom 4 RTK',
-        description: '高精度测绘无人机，厘米级定位精度',
+        name: '大疆 M300 RTK',
+        model: 'DJI M300',
         type: '测绘无人机',
-        weight: '1.4',
-        duration: '30',
-        price: '800',
-        status: 'available',
-        image: 'https://neeko-copilot.bytedance.net/api/text2image?prompt=DJI%20Phantom%204%20RTK%20drone%20mapping%20white%20background&image_size=landscape_4_3'
+        image: 'https://picsum.photos/300/200?random=4',
+        price: 450,
+        unit: '小时',
+        location: '陕西西安',
+        owner: '精准测绘公司',
+        isCertified: true,
+        isHot: false,
+        rating: 4.9,
+        reviewCount: 42
       },
       {
         id: 5,
-        name: 'Yuneec H520',
-        description: '工业级巡检无人机，六旋翼设计，稳定可靠',
-        type: '巡检无人机',
-        weight: '2.8',
-        duration: '50',
-        price: '600',
-        status: 'available',
-        image: 'https://neeko-copilot.bytedance.net/api/text2image?prompt=Yuneec%20H520%20industrial%20drone%20inspection%20white%20background&image_size=landscape_4_3'
+        name: '大疆 T30 植保无人机',
+        model: 'DJI T30',
+        type: '植保无人机',
+        image: 'https://picsum.photos/300/200?random=5',
+        price: 250,
+        unit: '小时',
+        location: '安徽合肥',
+        owner: '绿翼植保服务队',
+        isCertified: true,
+        isHot: true,
+        rating: 4.8,
+        reviewCount: 95
       },
       {
         id: 6,
-        name: 'DJI Agras T20',
-        description: '紧凑型植保无人机，灵活高效，适合小面积作业',
+        name: '极飞 V50 无人机',
+        model: 'XAIRCRAFT V50',
         type: '植保无人机',
-        weight: '23',
-        duration: '22',
-        price: '1000',
-        status: 'rented',
-        image: 'https://neeko-copilot.bytedance.net/api/text2image?prompt=DJI%20Agras%20T20%20agricultural%20drone%20white%20background&image_size=landscape_4_3'
+        image: 'https://picsum.photos/300/200?random=6',
+        price: 300,
+        unit: '小时',
+        location: '浙江杭州',
+        owner: '智慧农业合作社',
+        isCertified: false,
+        isHot: false,
+        rating: 4.6,
+        reviewCount: 53
       }
     ])
     
-    const handleSearch = () => {
-      console.log('搜索条件:', filter)
-      ElMessage.info('搜索功能开发中')
+    const filteredEquipment = computed(() => {
+      return equipmentList.value
+    })
+    
+    const contactOwner = (equipment) => {
+      ElMessage.info(`正在联系 ${equipment.owner}...`)
     }
     
-    const handleRent = (equipment) => {
-      if (equipment.status !== 'available') return
-      selectedEquipment.value = equipment
-      rentDialogVisible.value = true
-    }
-    
-    const submitRent = async () => {
-      try {
-        await rentFormRef.value.validate()
-        
-        const start = new Date(rentForm.startDate)
-        const end = new Date(rentForm.endDate)
-        
-        if (end <= start) {
-          ElMessage.error('结束日期必须大于开始日期')
-          return
-        }
-        
-        const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24))
-        const totalPrice = days * parseFloat(selectedEquipment.value.price)
-        
-        ElMessage.success(`租用成功！共${days}天，总费用：¥${totalPrice}`)
-        rentDialogVisible.value = false
-        
-        rentForm.startDate = ''
-        rentForm.endDate = ''
-        rentForm.purpose = ''
-        rentForm.remark = ''
-        selectedEquipment.value = null
-      } catch (error) {
-        console.error('表单验证失败:', error)
-      }
+    const rentEquipment = (equipment) => {
+      ElMessage.success(`已发起对 ${equipment.name} 的租赁请求`)
     }
     
     return {
-      filter,
-      pagination,
+      router,
+      currentPage,
+      totalPages,
+      filters,
       equipmentList,
-      rentDialogVisible,
-      selectedEquipment,
-      rentForm,
-      rentRules,
-      rentFormRef,
-      handleSearch,
-      handleRent,
-      submitRent
+      filteredEquipment,
+      contactOwner,
+      rentEquipment
     }
   }
 }
@@ -315,300 +264,443 @@ export default {
 
 <style scoped>
 .equipment-page {
+  min-height: 100vh;
+  background: #f8f9fa;
+}
+
+.page-navbar {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.logo-icon {
+  font-size: 28px;
+}
+
+.logo-text {
+  font-size: 20px;
+  font-weight: 700;
+  color: #3b82f6;
+}
+
+.navbar-center {
+  flex: 1;
+  max-width: 400px;
+  margin: 0 30px;
+}
+
+.search-box {
+  display: flex;
+  background: #f3f4f6;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  padding: 8px 14px;
+  font-size: 13px;
+  background: transparent;
+  outline: none;
+}
+
+.search-btn {
+  padding: 8px 16px;
+  background: #3b82f6;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.navbar-right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.nav-btn {
+  padding: 6px 14px;
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  color: #4b5563;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.nav-btn:hover {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.nav-btn.active {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.15);
+  font-weight: 600;
+}
+
+.page-content {
+  max-width: 1400px;
+  margin: 0 auto;
   padding: 24px;
 }
 
-.page-header {
+.filter-section {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
   margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.page-title {
-  font-size: 28px;
+.filter-header {
+  margin-bottom: 20px;
+}
+
+.filter-header h2 {
+  font-size: 24px;
   font-weight: 700;
   color: #1f2937;
   margin: 0 0 8px 0;
 }
 
-.page-subtitle {
+.filter-header p {
   font-size: 14px;
   color: #6b7280;
   margin: 0;
 }
 
-.filter-bar {
-  display: flex;
-  align-items: center;
+.filter-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
-  margin-bottom: 24px;
-  padding: 16px 20px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  flex-wrap: wrap;
 }
 
 .filter-group {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
 }
 
 .filter-select {
-  width: 160px;
+  padding: 10px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s;
 }
 
-.search-input {
-  width: 240px;
+.filter-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.search-btn {
-  margin-left: auto;
+.equipment-list {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.list-header {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.result-count {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 0;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.empty-state p {
+  font-size: 16px;
+  color: #6b7280;
 }
 
 .equipment-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  margin-bottom: 32px;
+  gap: 20px;
 }
 
 .equipment-card {
-  background: #fff;
-  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
+  transition: all 0.3s;
 }
 
 .equipment-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: #3b82f6;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.1);
 }
 
-.equipment-card--available {
-  border: 2px solid rgba(59, 130, 246, 0.2);
-}
-
-.equipment-image {
+.card-image {
   position: relative;
   height: 200px;
   overflow: hidden;
 }
 
-.equipment-image img {
+.card-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.equipment-badge {
+.card-tags {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  padding: 6px 12px;
-  border-radius: 20px;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.tag {
+  padding: 4px 10px;
+  border-radius: 4px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-.equipment-badge.available {
-  background: rgba(34, 197, 94, 0.9);
-  color: #fff;
+.tag.certified {
+  background: #dbeafe;
+  color: #1e40af;
 }
 
-.equipment-badge.rented {
-  background: rgba(156, 163, 175, 0.9);
-  color: #fff;
+.tag.hot {
+  background: #fef3c7;
+  color: #92400e;
 }
 
-.equipment-info {
-  padding: 20px;
+.card-body {
+  padding: 16px;
 }
 
-.equipment-name {
-  font-size: 18px;
+.card-title {
+  font-size: 16px;
   font-weight: 600;
   color: #1f2937;
   margin: 0 0 8px 0;
 }
 
-.equipment-desc {
-  font-size: 13px;
-  color: #6b7280;
-  margin: 0 0 12px 0;
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.equipment-specs {
+.card-specs {
   display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .spec-item {
+  padding: 4px 10px;
+  background: #f3f4f6;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.meta-item {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.card-rating {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+}
+
+.stars {
+  color: #fbbf24;
+}
+
+.rating-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.rating-count {
   font-size: 12px;
   color: #9ca3af;
 }
 
-.spec-icon {
-  font-size: 14px;
+.card-footer {
+  padding: 16px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.equipment-price {
+.price-info {
   display: flex;
   align-items: baseline;
-  gap: 4px;
-  margin-bottom: 16px;
 }
 
-.price-label {
-  font-size: 13px;
-  color: #9ca3af;
+.currency {
+  font-size: 14px;
+  color: #ef4444;
+  font-weight: 600;
 }
 
-.price-value {
+.price {
   font-size: 24px;
   font-weight: 700;
   color: #ef4444;
 }
 
-.price-unit {
+.unit {
   font-size: 13px;
-  color: #9ca3af;
+  color: #6b7280;
+  margin-left: 4px;
 }
 
-.rent-btn {
-  width: 100%;
-  height: 44px;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 8px;
-}
-
-.pagination-container {
+.card-actions {
   display: flex;
-  justify-content: center;
+  gap: 8px;
+}
+
+.btn-contact,
+.btn-rent {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-contact {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
+}
+
+.btn-contact:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.btn-rent {
+  background: #3b82f6;
+  border: 1px solid #3b82f6;
+  color: #fff;
+}
+
+.btn-rent:hover {
+  background: #2563eb;
 }
 
 .pagination {
-  margin-top: 24px;
-}
-
-.rent-form {
-  padding: 16px 0;
-}
-
-.rent-equipment-info {
   display: flex;
-  gap: 16px;
-  padding: 16px;
-  background: #f9fafb;
-  border-radius: 12px;
-  margin-bottom: 20px;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-top: 30px;
 }
 
-.rent-image {
-  width: 120px;
-  height: 120px;
-  object-fit: cover;
-  border-radius: 8px;
+.page-btn {
+  padding: 8px 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  background: #fff;
+  color: #4b5563;
+  transition: all 0.3s;
 }
 
-.rent-equipment-detail {
-  flex: 1;
+.page-btn:hover:not(:disabled) {
+  border-color: #3b82f6;
+  color: #3b82f6;
 }
 
-.rent-equipment-detail h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 8px 0;
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.rent-equipment-detail p {
-  font-size: 13px;
-  color: #6b7280;
-  margin: 0 0 12px 0;
-}
-
-.rent-price {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-}
-
-.rent-price-label {
-  font-size: 13px;
+.page-info {
+  font-size: 14px;
   color: #6b7280;
 }
 
-.rent-price-value {
-  font-size: 20px;
-  font-weight: 700;
-  color: #ef4444;
-}
-
-.rent-price-unit {
-  font-size: 13px;
-  color: #6b7280;
-}
-
-.form-content {
-  padding: 0 8px;
-}
-
-.date-picker {
-  width: 100%;
-}
-
-@media (max-width: 1200px) {
+@media (max-width: 1024px) {
   .equipment-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .filter-row {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 768px) {
-  .equipment-page {
-    padding: 16px;
-  }
-  
-  .filter-bar {
-    gap: 12px;
-  }
-  
-  .filter-select {
-    width: 140px;
-  }
-  
-  .search-input {
-    width: 100%;
-    max-width: 200px;
-  }
-  
-  .search-btn {
-    margin-left: 0;
-    width: 100%;
+  .navbar-center {
+    display: none;
   }
   
   .equipment-grid {
     grid-template-columns: 1fr;
   }
   
-  .rent-equipment-info {
+  .card-footer {
     flex-direction: column;
-    align-items: center;
-    text-align: center;
+    gap: 12px;
+    align-items: flex-start;
   }
   
-  .rent-image {
-    width: 150px;
-    height: 150px;
+  .card-actions {
+    width: 100%;
+  }
+  
+  .btn-contact,
+  .btn-rent {
+    flex: 1;
   }
 }
 </style>

@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/weather")
+@RequestMapping("/weather")
 public class WeatherImageController {
 
     @Autowired

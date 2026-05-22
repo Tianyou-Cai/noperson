@@ -31,7 +31,7 @@ import java.util.Collections;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
-    @Autowired      
+    @Autowired(required = false)      
     private StringRedisTemplate stringRedisTemplate;
 
     @Override

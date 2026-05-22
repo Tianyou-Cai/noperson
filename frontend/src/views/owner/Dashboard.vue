@@ -1,131 +1,196 @@
 <template>
   <div class="dashboard owner-dashboard">
-    <div class="dashboard-header">
-      <h1 class="dashboard-title">机主仪表盘</h1>
-      <p class="dashboard-subtitle">欢迎回来，{{ userName }}！查看您的设备和收益概览</p>
+    <!-- 顶部导航 -->
+    <nav class="dashboard-navbar">
+      <div class="navbar-content">
+        <div class="navbar-left">
+          <div class="logo" @click="router.push('/')">
+            <span class="logo-icon">🚁</span>
+            <span class="logo-text">农翼通商城</span>
+          </div>
+        </div>
+        <div class="navbar-center">
+          <div class="search-box">
+            <input type="text" placeholder="搜索设备、服务" class="search-input" />
+            <button class="search-btn">🔍</button>
+          </div>
+        </div>
+        <div class="navbar-right">
+          <button class="nav-btn" @click="router.push('/equipment-list')">设备市场</button>
+          <button class="nav-btn active">我的设备</button>
+          <button class="nav-btn" @click="router.push('/owner/profile')">
+            <span class="avatar">👤</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 用户信息卡片 -->
+    <div class="user-card">
+      <div class="user-info">
+        <div class="user-avatar">🏭</div>
+        <div class="user-detail">
+          <h2 class="user-name">{{ userName }}</h2>
+          <p class="user-role">🏢 机主用户</p>
+        </div>
+      </div>
+      <div class="user-stats">
+        <div class="user-stat-item">
+          <span class="stat-value">{{ stats.totalEquipment }}</span>
+          <span class="stat-label">设备总数</span>
+        </div>
+        <div class="user-stat-item">
+          <span class="stat-value">{{ stats.activeOrders }}</span>
+          <span class="stat-label">进行中订单</span>
+        </div>
+        <div class="user-stat-item">
+          <span class="stat-value">¥{{ stats.totalEarnings }}</span>
+          <span class="stat-label">累计收入</span>
+        </div>
+      </div>
     </div>
-    
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon device-icon">🛠️</div>
-        <div class="stat-content">
-          <div class="stat-value">{{ stats.deviceCount }}</div>
-          <div class="stat-label">设备总数</div>
-        </div>
+
+    <!-- 快捷统计 -->
+    <div class="stats-section">
+      <div class="section-header">
+        <h3>业务概览</h3>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon online-icon">🟢</div>
-        <div class="stat-content">
-          <div class="stat-value">{{ stats.onlineCount }}</div>
-          <div class="stat-label">在线设备</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon rental-icon">📤</div>
-        <div class="stat-content">
-          <div class="stat-value">{{ stats.rentalCount }}</div>
-          <div class="stat-label">租借中</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon earnings-icon">💰</div>
-        <div class="stat-content">
-          <div class="stat-value">¥{{ stats.totalEarnings }}</div>
-          <div class="stat-label">累计收益</div>
+      <div class="stats-grid">
+        <div 
+          v-for="stat in businessStats" 
+          :key="stat.key"
+          :class="['stat-card', stat.key]"
+          @click="goToSection(stat.key)"
+        >
+          <div class="stat-icon">{{ stat.icon }}</div>
+          <div class="stat-content">
+            <div class="stat-value">{{ stat.count }}</div>
+            <div class="stat-label">{{ stat.label }}</div>
+          </div>
+          <div class="stat-arrow">→</div>
         </div>
       </div>
     </div>
-    
+
+    <!-- 主内容区域 -->
     <div class="dashboard-content">
-      <div class="recent-devices">
+      <!-- 设备列表 -->
+      <div class="main-section">
         <div class="section-header">
-          <h2>设备列表</h2>
-          <el-button type="primary" class="add-device-btn" @click="goToAddDevice">
-            <el-icon class="plus-icon"><Plus /></el-icon>
-            添加设备
-          </el-button>
+          <h3>我的设备</h3>
+          <button class="view-all-btn" @click="goToEquipmentList">查看全部 →</button>
         </div>
-        <el-table :data="devices" border class="device-table">
-          <el-table-column prop="name" label="设备名称" min-width="150">
-            <template #default="scope">
-              <span class="device-name">{{ scope.row.name }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="model" label="设备型号" width="120" align="center">
-            <template #default="scope">
-              <span class="model-value">{{ scope.row.model }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="status" label="状态" width="100" align="center">
-            <template #default="scope">
-              <el-tag :type="getStatusType(scope.row.status)" size="small">
-                {{ getStatusLabel(scope.row.status) }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="renter" label="当前租客" width="120">
-            <template #default="scope">
-              <span class="renter-name">{{ scope.row.renter || '-' }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="income" label="累计收入" width="120" align="right">
-            <template #default="scope">
-              <span class="income-value">¥{{ scope.row.income }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="120">
-            <template #default="scope">
-              <el-button type="text" size="small" @click="goToDetail(scope.row.id)">查看详情</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
+        <div class="equipment-grid">
+          <div v-for="equipment in equipmentList" :key="equipment.id" class="equipment-card">
+            <div class="equipment-image-wrapper">
+              <img :src="equipment.image" class="equipment-image" />
+              <div v-if="equipment.status === 'available'" class="status-badge available">可租赁</div>
+              <div v-else class="status-badge busy">使用中</div>
+            </div>
+            <div class="equipment-info">
+              <h4 class="equipment-name">{{ equipment.name }}</h4>
+              <div class="equipment-specs">
+                <span class="spec-item">{{ equipment.type }}</span>
+                <span class="spec-item">{{ equipment.model }}</span>
+              </div>
+              <div class="equipment-footer">
+                <div class="equipment-price">
+                  <span class="currency">¥</span>
+                  <span class="price">{{ equipment.price }}</span>
+                  <span class="unit">/{{ equipment.unit }}</span>
+                </div>
+                <button 
+                  v-if="equipment.status === 'available'" 
+                  class="manage-btn" 
+                  @click="manageEquipment(equipment.id)"
+                >管理</button>
+                <button 
+                  v-else 
+                  class="manage-btn busy-btn" 
+                  @click="viewOrder(equipment.currentOrder)"
+                >查看订单</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      
-      <div class="quick-actions">
-        <div class="section-header">
-          <h2>快捷操作</h2>
-        </div>
-        <div class="action-grid">
-          <div class="action-card" @click="goToDevices">
-            <div class="action-icon">📋</div>
-            <div class="action-title">设备管理</div>
-            <div class="action-desc">管理所有设备</div>
-          </div>
-          <div class="action-card" @click="goToAddDevice">
-            <div class="action-icon">➕</div>
-            <div class="action-title">添加设备</div>
-            <div class="action-desc">添加新设备</div>
-          </div>
-          <div class="action-card" @click="goToRentalApply">
-            <div class="action-icon">📝</div>
-            <div class="action-title">租借申请</div>
-            <div class="action-desc">处理租借申请</div>
-          </div>
-          <div class="action-card" @click="goToDeviceActivities">
-            <div class="action-icon">📈</div>
-            <div class="action-title">设备动态</div>
-            <div class="action-desc">查看设备活动</div>
-          </div>
-        </div>
-        
-        <div class="rental-summary">
-          <div class="rental-header">
-            <h3>本月租金收入</h3>
-            <span class="rental-month">2024年1月</span>
-          </div>
-          <div class="rental-amount">¥{{ monthlyRental }}</div>
-          <div class="rental-stats">
-            <div class="rental-stat-item">
-              <span class="rental-stat-value">{{ activeRentals }}</span>
-              <span class="rental-stat-label">进行中</span>
+
+      <!-- 侧边栏 -->
+      <div class="sidebar">
+        <!-- 快捷操作 -->
+        <div class="quick-actions">
+          <h3>快捷操作</h3>
+          <div class="actions-grid">
+            <div class="action-card" @click="goToAddEquipment">
+              <div class="action-icon">➕</div>
+              <div class="action-content">
+                <span class="action-title">添加设备</span>
+                <span class="action-desc">新增无人机设备</span>
+              </div>
             </div>
-            <div class="rental-stat-item">
-              <span class="rental-stat-value">{{ pendingApplies }}</span>
-              <span class="rental-stat-label">待审核</span>
+            <div class="action-card" @click="goToServiceList">
+              <div class="action-icon">📋</div>
+              <div class="action-content">
+                <span class="action-title">设备列表</span>
+                <span class="action-desc">管理所有设备</span>
+              </div>
             </div>
-            <div class="rental-stat-item">
-              <span class="rental-stat-value">{{ completedCount }}</span>
-              <span class="rental-stat-label">已完成</span>
+            <div class="action-card" @click="goToOrders">
+              <div class="action-icon">📦</div>
+              <div class="action-content">
+                <span class="action-title">订单管理</span>
+                <span class="action-desc">查看全部订单</span>
+              </div>
+            </div>
+            <div class="action-card" @click="goToEarnings">
+              <div class="action-icon">💰</div>
+              <div class="action-content">
+                <span class="action-title">收益统计</span>
+                <span class="action-desc">查看收入明细</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 最近订单 -->
+        <div class="recent-orders">
+          <h3>最近订单</h3>
+          <div class="orders-list">
+            <div v-for="order in recentOrders" :key="order.id" class="order-item">
+              <div class="order-info">
+                <div class="order-id">{{ order.id }}</div>
+                <div class="order-equipment">{{ order.equipment }}</div>
+              </div>
+              <div class="order-amount">
+                <span :class="['status-dot', order.status]"></span>
+                <span class="amount">¥{{ order.amount }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 租赁收益 -->
+        <div class="earnings-card">
+          <div class="earnings-header">
+            <span class="earnings-icon">📈</span>
+            <span class="earnings-title">本月收益</span>
+          </div>
+          <div class="earnings-content">
+            <div class="earnings-amount">¥{{ monthlyEarnings }}</div>
+            <div class="earnings-change">
+              <span class="change-icon">↑</span>
+              <span class="change-value">12.5%</span>
+              <span class="change-text">较上月</span>
+            </div>
+          </div>
+          <div class="earnings-breakdown">
+            <div class="breakdown-item">
+              <span class="breakdown-label">设备租赁</span>
+              <span class="breakdown-value">¥6,800</span>
+            </div>
+            <div class="breakdown-item">
+              <span class="breakdown-label">服务收入</span>
+              <span class="breakdown-value">¥3,200</span>
             </div>
           </div>
         </div>
@@ -138,79 +203,123 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../../store/user'
-import { Plus } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 
 export default {
   name: 'OwnerDashboard',
-  components: {
-    Plus
-  },
   setup() {
     const router = useRouter()
     const userStore = useUserStore()
     
     const userName = computed(() => {
-      return userStore.userInfo?.username || userStore.userInfo?.name || '机主'
+      return userStore.userInfo?.username || userStore.userInfo?.name || '机主用户'
     })
+    
+    const monthlyEarnings = ref(10000)
     
     const stats = ref({
-      deviceCount: 8,
-      onlineCount: 6,
-      rentalCount: 3,
-      totalEarnings: 28500
+      totalEquipment: 8,
+      activeOrders: 3,
+      totalEarnings: 86500
     })
     
-    const monthlyRental = ref(4500)
-    const activeRentals = ref(3)
-    const pendingApplies = ref(2)
-    const completedCount = ref(15)
-    
-    const devices = ref([
-      { id: 1, name: 'DJI Mavic 3 Pro', model: 'Mavic 3 Pro', status: 'rental', renter: '张飞手', income: 6800 },
-      { id: 2, name: 'DJI Phantom 4 RTK', model: 'Phantom 4 RTK', status: 'online', renter: '', income: 8200 },
-      { id: 3, name: 'DJI Inspire 3', model: 'Inspire 3', status: 'rental', renter: '李飞手', income: 5500 },
-      { id: 4, name: 'DJI Mini 3 Pro', model: 'Mini 3 Pro', status: 'online', renter: '', income: 3200 },
-      { id: 5, name: 'DJI Air 3', model: 'Air 3', status: 'rental', renter: '王飞手', income: 4800 }
+    const businessStats = ref([
+      { key: 'equipment', label: '设备管理', count: 8, icon: '🚁' },
+      { key: 'orders', label: '订单管理', count: 12, icon: '📦' },
+      { key: 'earnings', label: '收益统计', count: '¥86.5k', icon: '💰' },
+      { key: 'customers', label: '客户管理', count: 28, icon: '👥' }
     ])
     
-    const getStatusType = (status) => {
-      const types = {
-        online: 'success',
-        offline: 'danger',
-        rental: 'primary',
-        maintenance: 'warning'
+    const equipmentList = ref([
+      { 
+        id: 1, 
+        name: '大疆 T40 植保无人机', 
+        type: '植保无人机',
+        model: 'DJI T40',
+        image: 'https://picsum.photos/200/150?random=1',
+        price: 280,
+        unit: '小时',
+        status: 'available'
+      },
+      { 
+        id: 2, 
+        name: '极飞 P80 农业无人机', 
+        type: '植保无人机',
+        model: 'XAIRCRAFT P80',
+        image: 'https://picsum.photos/200/150?random=2',
+        price: 320,
+        unit: '小时',
+        status: 'busy',
+        currentOrder: 'ORD20240120001'
+      },
+      { 
+        id: 3, 
+        name: '大疆 T20P 无人机', 
+        type: '植保无人机',
+        model: 'DJI T20P',
+        image: 'https://picsum.photos/200/150?random=3',
+        price: 220,
+        unit: '小时',
+        status: 'available'
+      },
+      { 
+        id: 4, 
+        name: '大疆 M300 RTK', 
+        type: '测绘无人机',
+        model: 'DJI M300',
+        image: 'https://picsum.photos/200/150?random=4',
+        price: 450,
+        unit: '小时',
+        status: 'busy',
+        currentOrder: 'ORD20240120002'
       }
-      return types[status] || 'info'
-    }
+    ])
     
-    const getStatusLabel = (status) => {
-      const labels = {
-        online: '在线',
-        offline: '离线',
-        rental: '租借中',
-        maintenance: '维护中'
+    const recentOrders = ref([
+      { id: 'ORD20240120001', equipment: 'DJI T40', amount: 2800, status: 'processing' },
+      { id: 'ORD20240119002', equipment: 'XAIRCRAFT P80', amount: 3200, status: 'completed' },
+      { id: 'ORD20240118003', equipment: 'DJI T20P', amount: 1760, status: 'pending' },
+      { id: 'ORD20240117004', equipment: 'DJI M300', amount: 4500, status: 'processing' }
+    ])
+    
+    const goToSection = (key) => {
+      if (key === 'equipment') {
+        router.push('/owner/devices')
+      } else if (key === 'orders') {
+        router.push('/owner/rental-apply')
+      } else if (key === 'earnings') {
+        router.push('/owner/wallet')
+      } else if (key === 'customers') {
+        router.push('/owner/customers')
       }
-      return labels[status] || status
     }
     
-    const goToDevices = () => {
-      router.push('/devices')
+    const goToEquipmentList = () => {
+      router.push('/owner/devices')
     }
     
-    const goToAddDevice = () => {
-      router.push('/devices/add')
+    const goToAddEquipment = () => {
+      router.push('/owner/devices/add')
     }
     
-    const goToDetail = (id) => {
-      router.push(`/device/${id}`)
+    const goToServiceList = () => {
+      router.push('/owner/devices')
     }
     
-    const goToRentalApply = () => {
-      router.push('/rental-apply')
+    const goToOrders = () => {
+      router.push('/owner/rental-apply')
     }
     
-    const goToDeviceActivities = () => {
-      router.push('/device-activities')
+    const goToEarnings = () => {
+      router.push('/owner/wallet')
+    }
+    
+    const manageEquipment = (equipmentId) => {
+      router.push(`/owner/device/${equipmentId}`)
+    }
+    
+    const viewOrder = (orderId) => {
+      router.push(`/order-detail/${orderId}`)
     }
     
     onMounted(() => {
@@ -219,19 +328,19 @@ export default {
     
     return {
       userName,
+      monthlyEarnings,
       stats,
-      monthlyRental,
-      activeRentals,
-      pendingApplies,
-      completedCount,
-      devices,
-      getStatusType,
-      getStatusLabel,
-      goToDevices,
-      goToAddDevice,
-      goToDetail,
-      goToRentalApply,
-      goToDeviceActivities
+      businessStats,
+      equipmentList,
+      recentOrders,
+      goToSection,
+      goToEquipmentList,
+      goToAddEquipment,
+      goToServiceList,
+      goToOrders,
+      goToEarnings,
+      manageEquipment,
+      viewOrder
     }
   }
 }
@@ -239,48 +348,225 @@ export default {
 
 <style scoped>
 .dashboard {
-  padding: 24px;
-  min-height: 100%;
+  min-height: 100vh;
+  background: #f8f9fa;
 }
 
-.dashboard-header {
-  margin-bottom: 32px;
+.dashboard-navbar {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.dashboard-title {
-  font-size: 28px;
+.navbar-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.logo-icon {
+  font-size: 32px;
+}
+
+.logo-text {
+  font-size: 22px;
   font-weight: 700;
-  color: #1f2937;
+  color: #f59e0b;
+}
+
+.navbar-center {
+  flex: 1;
+  max-width: 500px;
+  margin: 0 40px;
+}
+
+.search-box {
+  display: flex;
+  background: #f3f4f6;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  padding: 10px 16px;
+  font-size: 14px;
+  background: transparent;
+  outline: none;
+}
+
+.search-btn {
+  padding: 10px 20px;
+  background: #f59e0b;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.navbar-right {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.nav-btn {
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  color: #4b5563;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.nav-btn:hover {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.nav-btn.active {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+  font-weight: 600;
+}
+
+.avatar {
+  font-size: 20px;
+}
+
+.user-card {
+  max-width: 1400px;
+  margin: 24px auto;
+  padding: 0 24px;
+}
+
+.user-card {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border-radius: 16px;
+  padding: 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #fff;
+}
+
+.user-info {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.user-avatar {
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+}
+
+.user-name {
+  font-size: 24px;
+  font-weight: 700;
   margin: 0 0 8px 0;
 }
 
-.dashboard-subtitle {
+.user-role {
   font-size: 14px;
-  color: #6b7280;
+  opacity: 0.9;
   margin: 0;
+}
+
+.user-stats {
+  display: flex;
+  gap: 48px;
+}
+
+.user-stat-item {
+  text-align: center;
+}
+
+.user-stat-item .stat-value {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.user-stat-item .stat-label {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.stats-section {
+  max-width: 1400px;
+  margin: 0 auto 24px;
+  padding: 0 24px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.view-all-btn {
+  background: none;
+  border: none;
+  color: #f59e0b;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  margin-bottom: 32px;
+  gap: 16px;
 }
 
 .stat-card {
   background: #fff;
-  border-radius: 16px;
-  padding: 24px;
+  border-radius: 12px;
+  padding: 20px;
   display: flex;
   align-items: center;
   gap: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s ease;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
 .stat-icon {
@@ -293,137 +579,237 @@ export default {
   font-size: 24px;
 }
 
-.device-icon {
+.stat-card.equipment .stat-icon {
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
 }
 
-.online-icon {
+.stat-card.orders .stat-icon {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
-.rental-icon {
+.stat-card.earnings .stat-icon {
   background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
 
-.earnings-icon {
-  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+.stat-card.customers .stat-icon {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
 }
 
 .stat-content {
   flex: 1;
 }
 
-.stat-value {
-  font-size: 28px;
+.stat-content .stat-value {
+  font-size: 24px;
   font-weight: 700;
   color: #1f2937;
 }
 
-.stat-label {
+.stat-content .stat-label {
   font-size: 13px;
   color: #6b7280;
-  margin-top: 4px;
+}
+
+.stat-arrow {
+  color: #9ca3af;
+  font-size: 18px;
 }
 
 .dashboard-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 24px;
 }
 
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.section-header h2 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0;
-}
-
-.add-device-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.plus-icon {
-  font-size: 14px;
-}
-
-.recent-devices {
+.main-section {
   background: #fff;
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.device-table {
+.equipment-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.equipment-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.equipment-card:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.1);
+}
+
+.equipment-image-wrapper {
+  position: relative;
+}
+
+.equipment-image {
   width: 100%;
+  height: 150px;
+  object-fit: cover;
 }
 
-.device-name {
+.status-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
   font-weight: 500;
-  color: #1f2937;
 }
 
-.model-value {
+.status-badge.available {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.busy {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.equipment-info {
+  padding: 16px;
+}
+
+.equipment-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+}
+
+.equipment-specs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.spec-item {
+  padding: 4px 10px;
+  background: #f3f4f6;
+  border-radius: 4px;
+  font-size: 12px;
   color: #6b7280;
 }
 
-.renter-name {
-  color: #3b82f6;
+.equipment-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.income-value {
+.equipment-price {
+  display: flex;
+  align-items: baseline;
+}
+
+.equipment-price .currency {
+  font-size: 14px;
+  color: #ef4444;
   font-weight: 600;
-  color: #10b981;
 }
 
-.quick-actions {
+.equipment-price .price {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ef4444;
+}
+
+.equipment-price .unit {
+  font-size: 13px;
+  color: #6b7280;
+  margin-left: 4px;
+}
+
+.manage-btn {
+  padding: 8px 20px;
+  background: #f59e0b;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.manage-btn:hover {
+  background: #d97706;
+}
+
+.manage-btn.busy-btn {
+  background: #6b7280;
+}
+
+.manage-btn.busy-btn:hover {
+  background: #4b5563;
+}
+
+.sidebar {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.action-grid {
+.quick-actions {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.quick-actions h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 16px 0;
+}
+
+.actions-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 
 .action-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+  gap: 12px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 12px;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s ease;
+  transition: all 0.3s;
 }
 
 .action-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  background: #fffbeb;
+  transform: translateY(-2px);
 }
 
 .action-icon {
-  font-size: 32px;
-  margin-bottom: 12px;
+  font-size: 28px;
+}
+
+.action-content {
+  display: flex;
+  flex-direction: column;
 }
 
 .action-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: #1f2937;
-  margin-bottom: 4px;
 }
 
 .action-desc {
@@ -431,57 +817,156 @@ export default {
   color: #9ca3af;
 }
 
-.rental-summary {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+.recent-orders {
+  background: #fff;
   border-radius: 16px;
-  padding: 24px;
-  color: #fff;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.rental-header {
+.recent-orders h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 16px 0;
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.order-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.order-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.order-id {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.order-equipment {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.order-amount {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-dot.pending {
+  background: #f59e0b;
+}
+
+.status-dot.processing {
+  background: #3b82f6;
+}
+
+.status-dot.completed {
+  background: #10b981;
+}
+
+.amount {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ef4444;
+}
+
+.earnings-card {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border-radius: 16px;
+  padding: 20px;
+  color: #fff;
+}
+
+.earnings-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 12px;
 }
 
-.rental-header h3 {
-  font-size: 16px;
+.earnings-icon {
+  font-size: 20px;
+}
+
+.earnings-title {
+  font-size: 14px;
   font-weight: 600;
-  margin: 0;
 }
 
-.rental-month {
-  font-size: 13px;
-  opacity: 0.8;
+.earnings-content {
+  margin-bottom: 16px;
 }
 
-.rental-amount {
-  font-size: 36px;
+.earnings-amount {
+  font-size: 32px;
   font-weight: 700;
-  margin-bottom: 20px;
+  margin-bottom: 8px;
 }
 
-.rental-stats {
+.earnings-change {
   display: flex;
-  justify-content: space-between;
-}
-
-.rental-stat-item {
-  display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 4px;
 }
 
-.rental-stat-value {
-  font-size: 24px;
-  font-weight: 700;
+.change-icon {
+  color: #10b981;
 }
 
-.rental-stat-label {
-  font-size: 12px;
+.change-value {
+  font-weight: 600;
+  color: #10b981;
+}
+
+.change-text {
+  font-size: 13px;
   opacity: 0.8;
+}
+
+.earnings-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+}
+
+.breakdown-label {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.breakdown-value {
+  font-size: 13px;
+  font-weight: 600;
 }
 
 @media (max-width: 1024px) {
@@ -492,23 +977,50 @@ export default {
   .dashboard-content {
     grid-template-columns: 1fr;
   }
+  
+  .sidebar {
+    order: -1;
+  }
+  
+  .equipment-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
-  .dashboard {
-    padding: 16px;
+  .navbar-center {
+    display: none;
+  }
+  
+  .navbar-right {
+    gap: 8px;
+  }
+  
+  .nav-btn {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+  
+  .user-card {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+  
+  .user-info {
+    flex-direction: column;
+  }
+  
+  .user-stats {
+    gap: 24px;
   }
   
   .stats-grid {
     grid-template-columns: 1fr;
   }
   
-  .action-grid {
+  .actions-grid {
     grid-template-columns: 1fr;
-  }
-  
-  .dashboard-title {
-    font-size: 24px;
   }
 }
 </style>

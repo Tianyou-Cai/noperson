@@ -197,7 +197,7 @@ export const useUserStore = defineStore('user', {
       
       addRoleRoutes(newRole)
       
-      await router.push('/dashboard')
+      await router.push(`/${newRole}/dashboard`)
       
       ElMessage.success(`已切换为${ROLE_LABELS[newRole]}角色`)
     }

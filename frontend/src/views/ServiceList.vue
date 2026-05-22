@@ -6,19 +6,20 @@
         <div class="navbar-left">
           <div class="logo" @click="router.push('/')">
             <span class="logo-icon">🚁</span>
-            <span class="logo-text">农翼通</span>
+            <span class="logo-text">农翼通商城</span>
           </div>
         </div>
         <div class="navbar-center">
           <div class="search-box">
-            <input type="text" v-model="searchKeyword" class="search-input" placeholder="搜索服务" @keyup.enter="handleSearch" />
-            <button class="search-btn" @click="handleSearch">搜索</button>
+            <input type="text" v-model="searchKeyword" class="search-input" placeholder="搜索服务、设备、飞手" @keyup.enter="handleSearch" />
+            <button class="search-btn">🔍</button>
           </div>
         </div>
         <div class="navbar-right">
           <button class="nav-btn" @click="router.push('/')">首页</button>
           <button class="nav-btn active">找服务</button>
           <button class="nav-btn" @click="router.push('/equipment-list')">租设备</button>
+          <button class="nav-btn" @click="router.push('/orders')">我的订单</button>
         </div>
       </div>
     </nav>
@@ -44,6 +45,7 @@
                 @change="handleFilterChange"
               />
               <span>{{ type.name }}</span>
+              <span class="option-count">{{ type.count }}</span>
             </label>
           </div>
         </div>
@@ -105,27 +107,28 @@
           </div>
         </div>
 
-        <!-- 飞手类型 -->
+        <!-- 服务模式 -->
         <div class="filter-section">
-          <h4 class="filter-label">服务提供方</h4>
+          <h4 class="filter-label">服务模式</h4>
           <div class="filter-options">
             <label 
-              v-for="provider in providerTypes" 
-              :key="provider.id"
-              :class="['filter-option', { active: filters.providerType === provider.id }]"
+              v-for="mode in serviceModes" 
+              :key="mode.id"
+              :class="['filter-option', { active: filters.mode === mode.id }]"
             >
               <input 
                 type="radio" 
-                :value="provider.id" 
-                v-model="filters.providerType"
+                :value="mode.id" 
+                v-model="filters.mode"
                 @change="handleFilterChange"
               />
-              <span>{{ provider.name }}</span>
+              <span>{{ mode.name }}</span>
+              <span :class="['mode-tag', mode.id]">{{ mode.tag }}</span>
             </label>
           </div>
         </div>
 
-        <!-- 加载作业类型 -->
+        <!-- 适用作物 -->
         <div class="filter-section">
           <h4 class="filter-label">适用作物</h4>
           <div class="filter-options">
@@ -147,7 +150,7 @@
 
         <div class="filter-actions">
           <button class="reset-btn" @click="handleReset">重置</button>
-          <button class="confirm-btn" @click="handleFilterChange">确定</button>
+          <button class="confirm-btn" @click="handleFilterChange">筛选</button>
         </div>
       </aside>
 
@@ -156,7 +159,7 @@
         <!-- 排序和工具栏 -->
         <div class="toolbar">
           <div class="toolbar-left">
-            <span class="result-count">共找到 <strong>{{ total }}</strong> 个服务</span>
+            <span class="result-count">共找到 <strong>{{ total }}</strong> 件服务</span>
           </div>
           <div class="toolbar-right">
             <span class="sort-label">排序：</span>
@@ -179,41 +182,46 @@
             class="service-card"
             @click="goToDetail(service.id)"
           >
-            <div class="service-image">
-              <img :src="service.image" :alt="service.title" />
-              <div class="service-tags">
-                <span v-if="service.isCertified" class="tag certified">认证</span>
-                <span v-if="service.isNew" class="tag new">新品</span>
-                <span v-if="service.isHot" class="tag hot">热门</span>
+            <div class="service-image-wrapper">
+              <div class="service-image">
+                <img :src="service.image" :alt="service.title" />
               </div>
+              <div class="service-tags">
+                <span v-if="service.isCertified" class="tag certified">✓ 认证</span>
+                <span v-if="service.isNew" class="tag new">新品</span>
+                <span v-if="service.isHot" class="tag hot">🔥 热销</span>
+              </div>
+              <div v-if="service.discount" class="discount-badge">{{ service.discount }}</div>
             </div>
             <div class="service-info">
+              <div class="service-provider-header">
+                <span :class="['provider-badge', service.providerType]">
+                  {{ service.providerType === 'flyer' ? '👤 C2C' : '🏢 B2C' }}
+                </span>
+                <span class="provider-name">{{ service.providerName }}</span>
+              </div>
               <h4 class="service-title">{{ service.title }}</h4>
               <div class="service-desc">{{ service.description }}</div>
-              <div class="service-provider">
-                <span class="provider-name">{{ service.providerName }}</span>
-                <span :class="['provider-type', service.providerType]">
-                  {{ service.providerType === 'flyer' ? '飞手' : '机主' }}
-                </span>
-              </div>
               <div class="service-meta">
                 <span class="location">📍 {{ service.location }}</span>
-                <span class="sales">已售 {{ formatNumber(service.sales) }}</span>
+                <span class="delivery">🚚 {{ service.deliveryTime }}</span>
               </div>
-              <div class="service-rating">
-                <span class="rating-score">{{ service.rating }}</span>
-                <div class="rating-stars">
-                  <span v-for="i in 5" :key="i" :class="['star', { filled: i <= Math.floor(service.rating) }]">★</span>
+              <div class="service-rating-row">
+                <div class="service-rating">
+                  <span class="rating-score">{{ service.rating }}</span>
+                  <div class="rating-stars">
+                    <span v-for="i in 5" :key="i" :class="['star', { filled: i <= Math.floor(service.rating) }]">★</span>
+                  </div>
                 </div>
-                <span class="reviews">({{ service.reviews }}条评价)</span>
+                <span class="sales">已售 {{ formatNumber(service.sales) }}</span>
               </div>
               <div class="service-footer">
                 <div class="service-price">
                   <span class="currency">¥</span>
                   <span class="price">{{ service.price }}</span>
-                  <span class="unit">/{{ service.unit }}</span>
+                  <span class="unit">{{ service.unit }}</span>
                 </div>
-                <button class="contact-btn">立即咨询</button>
+                <button class="buy-btn" @click.stop="handleBuy(service)">立即购买</button>
               </div>
             </div>
           </div>
@@ -224,7 +232,7 @@
           <el-pagination
             v-model:current-page="pagination.currentPage"
             v-model:page-size="pagination.pageSize"
-            :page-sizes="[10, 20, 30, 50]"
+            :page-sizes="[12, 24, 36, 48]"
             :total="total"
             layout="total, sizes, prev, pager, next, jumper"
             @size-change="handleSizeChange"
@@ -239,6 +247,7 @@
 <script>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 
 export default {
   name: 'ServiceList',
@@ -254,26 +263,26 @@ export default {
       priceMin: '',
       priceMax: '',
       area: '',
-      providerType: '',
+      mode: '',
       cropType: ''
     })
 
     const serviceTypes = ref([
-      { id: '', name: '全部' },
-      { id: 'spray', name: '农药喷洒' },
-      { id: 'seed', name: '播种服务' },
-      { id: 'fertilize', name: '施肥作业' },
-      { id: 'monitor', name: '农情监测' },
-      { id: 'weed', name: '除草服务' },
-      { id: 'manage', name: '植保托管' }
+      { id: '', name: '全部', count: 156 },
+      { id: 'spray', name: '农药喷洒', count: 45 },
+      { id: 'seed', name: '播种服务', count: 28 },
+      { id: 'fertilize', name: '施肥作业', count: 32 },
+      { id: 'monitor', name: '农情监测', count: 18 },
+      { id: 'weed', name: '除草服务', count: 21 },
+      { id: 'manage', name: '植保托管', count: 12 }
     ])
 
     const priceRanges = ref([
       { id: '', name: '全部' },
-      { id: '1', name: '15 元以下' },
-      { id: '2', name: '15-25 元' },
-      { id: '3', name: '25-35 元' },
-      { id: '4', name: '35 元以上' }
+      { id: '1', name: '15元以下' },
+      { id: '2', name: '15-25元' },
+      { id: '3', name: '25-35元' },
+      { id: '4', name: '35元以上' }
     ])
 
     const serviceAreas = ref([
@@ -286,10 +295,10 @@ export default {
       { id: 'shaanxi', name: '陕西省' }
     ])
 
-    const providerTypes = ref([
-      { id: '', name: '全部' },
-      { id: 'flyer', name: '飞手' },
-      { id: 'owner', name: '机主' }
+    const serviceModes = ref([
+      { id: '', name: '全部', tag: '' },
+      { id: 'ctoc', name: '农户直供', tag: 'C2C' },
+      { id: 'btoc', name: '商家服务', tag: 'B2C' }
     ])
 
     const cropTypes = ref([
@@ -303,35 +312,38 @@ export default {
     ])
 
     const sortOptions = ref([
-      { id: 'default', name: '综合' },
-      { id: 'sales', name: '销量' },
-      { id: 'price_asc', name: '价格↑' },
-      { id: 'price_desc', name: '价格↓' },
-      { id: 'rating', name: '好评' }
+      { id: 'default', name: '综合排序' },
+      { id: 'sales', name: '销量优先' },
+      { id: 'price_asc', name: '价格从低到高' },
+      { id: 'price_desc', name: '价格从高到低' },
+      { id: 'rating', name: '好评优先' },
+      { id: 'newest', name: '最新上架' }
     ])
 
     const pagination = ref({
       currentPage: 1,
-      pageSize: 20
+      pageSize: 12
     })
 
     const serviceList = ref([
       {
         id: 1,
         title: '专业小麦农药喷洒服务 - 高效均匀 快速响单',
-        description: '采用大疆 T30 无人机，专业飞手团队，日均作业 500 亩+',
+        description: '采用大疆 T30 无人机，专业飞手团队，日均作业 500亩+',
         image: 'https://picsum.photos/400/300?random=10',
         price: 15,
-        unit: '亩',
+        unit: '/亩',
         sales: 2340,
         rating: 4.9,
         reviews: 856,
         providerName: '绿翼植保服务队',
         providerType: 'flyer',
         location: '山东济南',
+        deliveryTime: '24小时内响应',
         isCertified: true,
         isHot: true,
-        isNew: false
+        isNew: false,
+        discount: '满100亩减5%'
       },
       {
         id: 2,
@@ -339,16 +351,18 @@ export default {
         description: '机主直营，设备先进，价格优惠，包您满意',
         image: 'https://picsum.photos/400/300?random=11',
         price: 25,
-        unit: '亩',
+        unit: '/亩',
         sales: 1890,
         rating: 4.8,
         reviews: 623,
         providerName: '丰收获服合作社',
         providerType: 'owner',
         location: '江苏徐州',
+        deliveryTime: '48小时内响应',
         isCertified: true,
         isHot: true,
-        isNew: false
+        isNew: false,
+        discount: ''
       },
       {
         id: 3,
@@ -356,16 +370,18 @@ export default {
         description: '专业团队，快速响应，服务周到',
         image: 'https://picsum.photos/400/300?random=12',
         price: 18,
-        unit: '亩',
+        unit: '/亩',
         sales: 1567,
         rating: 4.7,
         reviews: 445,
         providerName: '天宇农业服务',
         providerType: 'flyer',
         location: '河南郑州',
+        deliveryTime: '24小时内响应',
         isCertified: true,
         isHot: false,
-        isNew: false
+        isNew: false,
+        discount: ''
       },
       {
         id: 4,
@@ -373,16 +389,18 @@ export default {
         description: '果树专家，好评如潮，经验丰富',
         image: 'https://picsum.photos/400/300?random=13',
         price: 35,
-        unit: '亩',
+        unit: '/亩',
         sales: 1234,
         rating: 4.9,
         reviews: 512,
         providerName: '惠农植保中心',
         providerType: 'owner',
         location: '陕西西安',
+        deliveryTime: '48小时内响应',
         isCertified: true,
         isHot: true,
-        isNew: false
+        isNew: false,
+        discount: '首单立减10%'
       },
       {
         id: 5,
@@ -390,16 +408,18 @@ export default {
         description: '性价比高，覆盖面积广，服务靠谱',
         image: 'https://picsum.photos/400/300?random=14',
         price: 20,
-        unit: '亩',
+        unit: '/亩',
         sales: 987,
         rating: 4.6,
         reviews: 328,
         providerName: '田野飞防大队',
         providerType: 'flyer',
         location: '安徽合肥',
+        deliveryTime: '24小时内响应',
         isCertified: false,
         isHot: false,
-        isNew: true
+        isNew: true,
+        discount: '新店特惠'
       },
       {
         id: 6,
@@ -407,16 +427,18 @@ export default {
         description: '蔬菜专精，绿色防控，品质保证',
         image: 'https://picsum.photos/400/300?random=15',
         price: 28,
-        unit: '亩',
+        unit: '/亩',
         sales: 876,
         rating: 4.8,
         reviews: 267,
         providerName: '绿源农业合作社',
         providerType: 'owner',
         location: '山东潍坊',
+        deliveryTime: '48小时内响应',
         isCertified: true,
         isHot: false,
-        isNew: false
+        isNew: false,
+        discount: ''
       },
       {
         id: 7,
@@ -424,16 +446,18 @@ export default {
         description: '新疆本地团队，熟悉棉花作业流程',
         image: 'https://picsum.photos/400/300?random=16',
         price: 22,
-        unit: '亩',
+        unit: '/亩',
         sales: 765,
         rating: 4.7,
         reviews: 198,
         providerName: '新疆飞防总站',
         providerType: 'flyer',
         location: '新疆乌鲁木齐',
+        deliveryTime: '24小时内响应',
         isCertified: true,
         isHot: false,
-        isNew: false
+        isNew: false,
+        discount: ''
       },
       {
         id: 8,
@@ -441,16 +465,94 @@ export default {
         description: '福建安溪茶园专用，保护茶叶品质',
         image: 'https://picsum.photos/400/300?random=17',
         price: 30,
-        unit: '亩',
+        unit: '/亩',
         sales: 654,
         rating: 4.9,
         reviews: 156,
         providerName: '茶乡植保服务',
         providerType: 'owner',
         location: '福建安溪',
+        deliveryTime: '48小时内响应',
         isCertified: true,
         isHot: true,
-        isNew: true
+        isNew: true,
+        discount: '满50亩包邮'
+      },
+      {
+        id: 9,
+        title: '大豆病虫害防治 - 科学防治 保产增收',
+        description: '专业团队，精准防治，确保收成',
+        image: 'https://picsum.photos/400/300?random=18',
+        price: 22,
+        unit: '/亩',
+        sales: 543,
+        rating: 4.7,
+        reviews: 145,
+        providerName: '金色田野植保',
+        providerType: 'flyer',
+        location: '黑龙江哈尔滨',
+        deliveryTime: '24小时内响应',
+        isCertified: true,
+        isHot: false,
+        isNew: false,
+        discount: ''
+      },
+      {
+        id: 10,
+        title: '果园施肥服务 - 精准配方 营养均衡',
+        description: '根据果树需求，科学配比施肥',
+        image: 'https://picsum.photos/400/300?random=19',
+        price: 32,
+        unit: '/亩',
+        sales: 432,
+        rating: 4.8,
+        reviews: 98,
+        providerName: '果农之友合作社',
+        providerType: 'owner',
+        location: '山西运城',
+        deliveryTime: '48小时内响应',
+        isCertified: true,
+        isHot: false,
+        isNew: false,
+        discount: '团购优惠'
+      },
+      {
+        id: 11,
+        title: '油菜病虫害防治 - 专业团队 高效作业',
+        description: '针对油菜特点，精准防治病虫害',
+        image: 'https://picsum.photos/400/300?random=20',
+        price: 20,
+        unit: '/亩',
+        sales: 321,
+        rating: 4.6,
+        reviews: 76,
+        providerName: '油菜花飞防队',
+        providerType: 'flyer',
+        location: '湖北武汉',
+        deliveryTime: '24小时内响应',
+        isCertified: false,
+        isHot: false,
+        isNew: true,
+        discount: '新用户立减'
+      },
+      {
+        id: 12,
+        title: '烟草植保服务 - 绿色防控 品质保障',
+        description: '烟草专用植保方案，确保烟叶品质',
+        image: 'https://picsum.photos/400/300?random=21',
+        price: 38,
+        unit: '/亩',
+        sales: 210,
+        rating: 4.9,
+        reviews: 56,
+        providerName: '金叶植保科技',
+        providerType: 'owner',
+        location: '云南玉溪',
+        deliveryTime: '48小时内响应',
+        isCertified: true,
+        isHot: false,
+        isNew: false,
+        discount: '品质保证'
       }
     ])
 
@@ -463,6 +565,7 @@ export default {
 
     const handleSearch = () => {
       console.log('搜索:', searchKeyword.value)
+      pagination.value.currentPage = 1
       fetchServices()
     }
 
@@ -479,7 +582,7 @@ export default {
         priceMin: '',
         priceMax: '',
         area: '',
-        providerType: '',
+        mode: '',
         cropType: ''
       }
       searchKeyword.value = ''
@@ -507,6 +610,11 @@ export default {
       router.push(`/service-detail/${serviceId}`)
     }
 
+    const handleBuy = (service) => {
+      ElMessage.success(`已选择服务: ${service.title}`)
+      router.push(`/book-service/${service.id}`)
+    }
+
     const fetchServices = () => {
       console.log('获取服务列表...', {
         filters: filters.value,
@@ -525,7 +633,7 @@ export default {
       serviceTypes,
       priceRanges,
       serviceAreas,
-      providerTypes,
+      serviceModes,
       cropTypes,
       sortOptions,
       currentSort,
@@ -539,7 +647,8 @@ export default {
       handleSortChange,
       handleSizeChange,
       handleCurrentChange,
-      goToDetail
+      goToDetail,
+      handleBuy
     }
   }
 }
@@ -548,12 +657,12 @@ export default {
 <style scoped>
 .service-list-page {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: #f8f9fa;
 }
 
 .page-navbar {
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -562,7 +671,7 @@ export default {
 .navbar-content {
   max-width: 1600px;
   margin: 0 auto;
-  padding: 16px 24px;
+  padding: 12px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -581,51 +690,53 @@ export default {
 }
 
 .logo-icon {
-  font-size: 32px;
+  font-size: 36px;
 }
 
 .logo-text {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
   color: #10b981;
 }
 
 .navbar-center {
   flex: 1;
-  max-width: 500px;
+  max-width: 600px;
   margin: 0 40px;
 }
 
 .search-box {
   display: flex;
-  background: #f5f5f5;
-  border-radius: 8px;
+  background: #fff;
+  border-radius: 30px;
   overflow: hidden;
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s;
 }
 
 .search-box:focus-within {
   border-color: #10b981;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.15);
 }
 
 .search-input {
   flex: 1;
   border: none;
-  padding: 10px 16px;
-  font-size: 14px;
+  padding: 12px 20px;
+  font-size: 15px;
   background: transparent;
   outline: none;
 }
 
 .search-btn {
-  padding: 10px 24px;
+  padding: 12px 24px;
   background: #10b981;
   color: #fff;
   border: none;
-  font-size: 14px;
+  font-size: 18px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.3s;
 }
 
 .search-btn:hover {
@@ -634,29 +745,30 @@ export default {
 
 .navbar-right {
   display: flex;
-  gap: 20px;
+  gap: 16px;
   align-items: center;
 }
 
 .nav-btn {
-  padding: 8px 16px;
+  padding: 10px 20px;
   background: transparent;
   border: none;
-  font-size: 14px;
-  color: #333;
+  font-size: 15px;
+  color: #4b5563;
   cursor: pointer;
   transition: all 0.3s;
-  border-radius: 6px;
+  border-radius: 8px;
+  font-weight: 500;
 }
 
 .nav-btn:hover {
   color: #10b981;
-  background: rgba(16, 185, 129, 0.05);
+  background: rgba(16, 185, 129, 0.08);
 }
 
 .nav-btn.active {
   color: #10b981;
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.15);
   font-weight: 600;
 }
 
@@ -672,9 +784,9 @@ export default {
   width: 260px;
   flex-shrink: 0;
   background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
   height: fit-content;
   position: sticky;
   top: 100px;
@@ -682,11 +794,11 @@ export default {
 
 .filter-title {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
   color: #1f2937;
   margin-bottom: 20px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 2px solid #10b981;
 }
 
 .filter-section {
@@ -698,20 +810,21 @@ export default {
   font-weight: 600;
   color: #374151;
   margin-bottom: 12px;
+  display: block;
 }
 
 .filter-options {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .filter-option {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 6px;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
   font-size: 14px;
@@ -723,13 +836,39 @@ export default {
 }
 
 .filter-option.active {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.12);
   color: #10b981;
   font-weight: 500;
 }
 
 .filter-option input[type="radio"] {
   margin: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.option-count {
+  margin-left: auto;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.mode-tag {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.mode-tag.ctoc {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.mode-tag.btoc {
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .price-inputs {
@@ -741,9 +880,9 @@ export default {
 
 .price-input {
   flex: 1;
-  padding: 8px 12px;
+  padding: 10px 12px;
   border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 13px;
   outline: none;
   transition: border-color 0.3s;
@@ -767,10 +906,10 @@ export default {
 
 .reset-btn {
   flex: 1;
-  padding: 10px;
+  padding: 12px;
   background: #f3f4f6;
   border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 14px;
   color: #4b5563;
   cursor: pointer;
@@ -783,10 +922,10 @@ export default {
 
 .confirm-btn {
   flex: 2;
-  padding: 10px;
-  background: #10b981;
+  padding: 12px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 14px;
   color: #fff;
   cursor: pointer;
@@ -794,7 +933,8 @@ export default {
 }
 
 .confirm-btn:hover {
-  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .content-area {
@@ -825,7 +965,8 @@ export default {
 
 .result-count strong {
   color: #10b981;
-  font-size: 18px;
+  font-size: 20px;
+  font-weight: 700;
 }
 
 .toolbar-right {
@@ -843,7 +984,7 @@ export default {
   padding: 8px 16px;
   background: #f3f4f6;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 14px;
   color: #4b5563;
   cursor: pointer;
@@ -855,7 +996,7 @@ export default {
 }
 
 .sort-btn.active {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.12);
   color: #10b981;
   border-color: #10b981;
   font-weight: 500;
@@ -863,40 +1004,44 @@ export default {
 
 .services-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
 }
 
 .service-card {
   background: #fff;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
-  transition: all 0.3s;
+  transition: all 0.35s;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .service-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+}
+
+.service-image-wrapper {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
 }
 
 .service-image {
-  position: relative;
-  height: 220px;
-  overflow: hidden;
-  background: #f9fafb;
+  width: 100%;
+  height: 100%;
 }
 
 .service-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s;
+  transition: transform 0.4s;
 }
 
 .service-card:hover .service-image img {
-  transform: scale(1.1);
+  transform: scale(1.08);
 }
 
 .service-tags {
@@ -904,35 +1049,77 @@ export default {
   top: 12px;
   left: 12px;
   display: flex;
-  gap: 8px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .tag {
   padding: 4px 10px;
   border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
   color: #fff;
 }
 
 .tag.certified {
-  background: #10b981;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
 .tag.new {
-  background: #3b82f6;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
 }
 
 .tag.hot {
-  background: #f59e0b;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.discount-badge {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #fff;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .service-info {
   padding: 16px;
 }
 
+.service-provider-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.provider-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.provider-badge.flyer {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.provider-badge.owner {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.provider-name {
+  font-size: 12px;
+  color: #6b7280;
+}
+
 .service-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: #1f2937;
   margin-bottom: 8px;
@@ -941,14 +1128,14 @@ export default {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  min-height: 44px;
+  min-height: 40px;
   line-height: 1.4;
 }
 
 .service-desc {
-  font-size: 13px;
+  font-size: 12px;
   color: #6b7280;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -956,59 +1143,36 @@ export default {
   -webkit-box-orient: vertical;
 }
 
-.service-provider {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.provider-name {
-  font-size: 13px;
-  color: #6b7280;
-}
-
-.provider-type {
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.provider-type.flyer {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.provider-type.owner {
-  background: #fef3c7;
-  color: #92400e;
-}
-
 .service-meta {
   display: flex;
   justify-content: space-between;
-  font-size: 12px;
+  font-size: 11px;
   color: #9ca3af;
   margin-bottom: 10px;
+}
+
+.service-rating-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
 .service-rating {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 6px;
 }
 
 .rating-score {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   color: #f59e0b;
 }
 
 .rating-stars {
   display: flex;
-  gap: 2px;
+  gap: 1px;
 }
 
 .star {
@@ -1020,10 +1184,9 @@ export default {
   color: #fbbf24;
 }
 
-.reviews {
+.sales {
   font-size: 12px;
   color: #9ca3af;
-  margin-left: auto;
 }
 
 .service-footer {
@@ -1031,7 +1194,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding-top: 12px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #f3f4f6;
 }
 
 .service-price {
@@ -1052,24 +1215,26 @@ export default {
 }
 
 .unit {
-  font-size: 13px;
+  font-size: 12px;
   color: #6b7280;
+  margin-left: 2px;
 }
 
-.contact-btn {
+.buy-btn {
   padding: 8px 16px;
-  background: #10b981;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: #fff;
   border: none;
-  border-radius: 6px;
-  font-size: 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
 }
 
-.contact-btn:hover {
-  background: #059669;
-  transform: translateY(-1px);
+.buy-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .pagination-container {
@@ -1082,13 +1247,17 @@ export default {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1300px) {
   .services-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1024px) {
+  .services-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
   .filter-sidebar {
     display: none;
   }
@@ -1101,6 +1270,15 @@ export default {
   
   .services-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .navbar-right {
+    gap: 8px;
+  }
+  
+  .nav-btn {
+    padding: 8px 12px;
+    font-size: 13px;
   }
 }
 </style>

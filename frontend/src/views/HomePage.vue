@@ -5,9 +5,10 @@ import { useRouter } from 'vue-router';
 const router = useRouter();
 const navScrolled = ref(false);
 const currentBannerIndex = ref(0);
+const isLoading = ref(true);
 
-// 轮播图数据
-const banners = ref([
+// 默认轮播图数据（备用）
+const defaultBanners = [
   {
     id: 1,
     image: 'https://picsum.photos/1920/600?random=1',
@@ -29,7 +30,31 @@ const banners = ref([
     subtitle: '时间自由，收入可观，立即加入',
     link: '/register'
   }
-]);
+];
+
+// 轮播图数据
+const banners = ref([...defaultBanners]);
+
+// 获取UVA图片作为轮播图
+const loadUvaImages = async () => {
+  try {
+    const response = await fetch('/api/uva-images/random?count=3');
+    const result = await response.json();
+    
+    if (result.code === 200 && result.data && result.data.length > 0) {
+      const uvaImages = result.data;
+      banners.value = banners.value.map((banner, index) => ({
+        ...banner,
+        image: uvaImages[index] || banner.image
+      }));
+      console.log('轮播图已更新为UVA图片:', banners.value);
+    }
+  } catch (error) {
+    console.error('加载UVA图片失败:', error);
+  } finally {
+    isLoading.value = false;
+  }
+};
 
 // 服务分类
 const serviceCategories = ref([
@@ -274,6 +299,7 @@ const formatNumber = (num) => {
 onMounted(() => {
   window.addEventListener('scroll', handleScroll);
   startBannerTimer();
+  loadUvaImages();
 });
 
 onUnmounted(() => {

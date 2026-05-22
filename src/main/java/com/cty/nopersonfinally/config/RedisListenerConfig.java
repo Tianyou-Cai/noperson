@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.listener.PatternTopic;
@@ -19,7 +20,7 @@ public class RedisListenerConfig {
     @Autowired
     private RedisKeyExpirationListener redisKeyExpirationListener;
     
-    @Autowired
+    @Autowired(required = false)
     private RedisConnectionFactory redisConnectionFactory;
     
     /**
@@ -27,6 +28,11 @@ public class RedisListenerConfig {
      */
     @PostConstruct
     public void init() {
+        if (redisConnectionFactory == null) {
+            log.warn("RedisConnectionFactory未配置，跳过Redis键过期事件配置");
+            return;
+        }
+        
         try (RedisConnection connection = redisConnectionFactory.getConnection()) {
             // 检查当前配置
             java.util.Properties configProps = connection.getConfig("notify-keyspace-events");
@@ -40,7 +46,7 @@ public class RedisListenerConfig {
                 log.info("Redis notify-keyspace-events已设置为: Ex");
             }
         } catch (Exception e) {
-            log.error("配置Redis notify-keyspace-events失败: {}", e.getMessage(), e);
+            log.warn("配置Redis notify-keyspace-events失败(可能Redis未运行): {}", e.getMessage());
         }
     }
     
@@ -48,11 +54,22 @@ public class RedisListenerConfig {
      * 配置Redis消息监听容器，订阅键过期事件
      */
     @Bean
-    public RedisMessageListenerContainer container(RedisConnectionFactory connectionFactory) {
-        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-        container.setConnectionFactory(connectionFactory);
-        // 订阅__keyevent@0__:expired频道，监听db0的键过期事件
-        container.addMessageListener(redisKeyExpirationListener, new PatternTopic("__keyevent@0__:expired"));
-        return container;
+    @Lazy
+    public RedisMessageListenerContainer container() {
+        if (redisConnectionFactory == null) {
+            log.warn("RedisConnectionFactory未配置，跳过Redis消息监听容器创建");
+            return null;
+        }
+        
+        try {
+            RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+            container.setConnectionFactory(redisConnectionFactory);
+            // 订阅__keyevent@0__:expired频道，监听db0的键过期事件
+            container.addMessageListener(redisKeyExpirationListener, new PatternTopic("__keyevent@0__:expired"));
+            return container;
+        } catch (Exception e) {
+            log.warn("创建Redis消息监听容器失败(可能Redis未运行): {}", e.getMessage());
+            return null;
+        }
     }
 }

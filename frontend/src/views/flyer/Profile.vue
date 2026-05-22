@@ -108,15 +108,15 @@ export default {
     }
     
     const goToQualification = () => {
-      router.push('/qualification')
+      router.push('/flyer/qualification')
     }
     
     const goToAcceptOrder = () => {
-      router.push('/accept-order')
+      router.push('/flyer/accept-order')
     }
     
     const goToWallet = () => {
-      router.push('/wallet')
+      router.push('/flyer/wallet')
     }
     
     return {

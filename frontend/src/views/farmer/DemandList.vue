@@ -144,11 +144,11 @@ export default {
     }
     
     const goToPublishDemand = () => {
-      router.push('/publish-demand')
+      router.push('/farmer/publish-demand')
     }
     
     const goToDetail = (id) => {
-      router.push(`/demand-detail/${id}`)
+      router.push(`/farmer/demand-detail/${id}`)
     }
     
     const handleApply = (id) => {

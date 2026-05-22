@@ -1,433 +1,719 @@
 <template>
-  <div class="add-device">
-    <el-card>
-      <template #header>
-        <div class="card-header">
-          <span>添加设备</span>
+  <div class="add-device-page">
+    <!-- 顶部导航 -->
+    <nav class="page-navbar">
+      <div class="navbar-content">
+        <div class="navbar-left">
+          <div class="logo" @click="router.push('/')">
+            <span class="logo-icon">🚁</span>
+            <span class="logo-text">农翼通商城</span>
+          </div>
         </div>
-      </template>
-      
-      <el-form 
-        :model="deviceForm" 
-        :rules="rules" 
-        ref="deviceFormRef"
-        label-width="120px"
-        class="device-form"
-      >
-        <el-form-item label="设备名称" prop="deviceName">
-          <el-input 
-            v-model="deviceForm.deviceName" 
-            placeholder="请输入设备名称"
-          ></el-input>
-        </el-form-item>
-        
-        <el-form-item label="设备型号" prop="deviceModel">
-          <el-input 
-            v-model="deviceForm.deviceModel" 
-            placeholder="请输入设备型号"
-          ></el-input>
-        </el-form-item>
-        
-        <el-form-item label="设备制造商" prop="manufacturer">
-          <el-input 
-            v-model="deviceForm.manufacturer" 
-            placeholder="请输入设备制造商"
-          ></el-input>
-        </el-form-item>
-        
-        <el-form-item label="设备类型" prop="deviceType">
-          <el-select 
-            v-model="deviceForm.deviceType" 
-            placeholder="请选择设备类型"
-          >
-            <el-option label="航拍无人机" value="航拍无人机" />
-            <el-option label="测绘无人机" value="测绘无人机" />
-            <el-option label="喷洒无人机" value="喷洒无人机" />
-            <el-option label="巡检无人机" value="巡检无人机" />
-            <el-option label="其他类型" value="其他类型" />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="序列号" prop="serialNumber">
-          <el-input 
-            v-model="deviceForm.serialNumber" 
-            placeholder="请输入设备序列号"
-          ></el-input>
-        </el-form-item>
-        
-        <el-form-item label="购买日期" prop="purchaseDate">
-          <el-date-picker
-            v-model="deviceForm.purchaseDate"
-            type="date"
-            placeholder="选择购买日期"
-            style="width: 100%;"
-          />
-        </el-form-item>
-        
-        <el-form-item label="设备状态" prop="status">
-          <el-radio-group v-model="deviceForm.status">
-            <el-radio label="1">正常</el-radio>
-            <el-radio label="2">维护中</el-radio>
-            <el-radio label="4">停用</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        
-        <el-form-item label="品牌" prop="brand">
-          <el-select 
-            v-model="deviceForm.brand" 
-            placeholder="请选择品牌"
-          >
-            <el-option label="DJI大疆" value="DJI大疆" />
-            <el-option label="Parrot派诺特" value="Parrot派诺特" />
-            <el-option label="Yuneec昊翔" value="Yuneec昊翔" />
-            <el-option label="Autel道通" value="Autel道通" />
-            <el-option label="Skydio" value="Skydio" />
-            <el-option label="极飞XAG" value="极飞XAG" />
-            <el-option label="小米" value="小米" />
-            <el-option label="哈博森" value="哈博森" />
-            <el-option label="其他" value="其他" />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="最大载重(kg)" prop="maxLoad">
-          <el-input 
-            v-model.number="deviceForm.maxLoad" 
-            type="number"
-            placeholder="请输入最大载重"
-            :min="0"
-            step="0.1"
-          ></el-input>
-        </el-form-item>
-        
-        <el-form-item label="续航时间(分钟)" prop="endurance">
-          <el-input 
-            v-model.number="deviceForm.endurance" 
-            type="number"
-            placeholder="请输入续航时间"
-            :min="0"
-            step="1"
-          ></el-input>
-        </el-form-item>
-        
-        <el-form-item label="每小时租金(元)" prop="hourlyRent">
-          <el-input 
-            v-model.number="deviceForm.hourlyRent" 
-            type="number"
-            placeholder="请输入每小时租金"
-            :min="0"
-            step="0.01"
-          ></el-input>
-        </el-form-item>
-        
-        <!-- 设备图片上传 -->
-        <el-form-item label="设备图片" prop="picture">
-          <el-upload
-            class="avatar-uploader"
-            :action="''"
-            :show-file-list="false"
-            :auto-upload="false"
-            :on-change="handleImageChange"
-            accept="image/*"
-          >
-            <template #default>
-              <img v-if="deviceForm.picture" :src="deviceForm.picture" class="avatar" />
-              <div v-else class="avatar-placeholder">
-                <el-icon><Plus /></el-icon>
-                <div class="avatar-placeholder-text">上传设备图片</div>
+        <div class="navbar-center">
+          <div class="search-box">
+            <input type="text" placeholder="搜索设备" class="search-input" />
+            <button class="search-btn">🔍</button>
+          </div>
+        </div>
+        <div class="navbar-right">
+          <button class="nav-btn" @click="router.push('/equipment-list')">设备市场</button>
+          <button class="nav-btn active">添加设备</button>
+          <button class="nav-btn" @click="router.push('/owner/dashboard')">我的</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="page-content">
+      <div class="form-container">
+        <div class="form-header">
+          <h1>添加设备</h1>
+          <p>添加您的无人机设备到平台，开始对外租赁</p>
+        </div>
+
+        <div class="form-body">
+          <!-- 设备基本信息 -->
+          <div class="form-section">
+            <h3 class="section-title">📋 设备基本信息</h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">设备名称 <span class="required">*</span></label>
+                <input 
+                  type="text" 
+                  v-model="formData.name" 
+                  class="form-input" 
+                  placeholder="请输入设备名称"
+                />
               </div>
-            </template>
-          </el-upload>
-          <div class="upload-tips">支持 JPG、PNG 格式，大小不超过 5MB</div>
-        </el-form-item>
-        
-        <el-form-item>
-          <el-button 
-            type="primary" 
-            @click="handleSubmit"
-            :loading="loading"
-          >
-            提交
-          </el-button>
-          <el-button @click="handleCancel">取消</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+              <div class="form-group">
+                <label class="form-label">设备型号 <span class="required">*</span></label>
+                <input 
+                  type="text" 
+                  v-model="formData.model" 
+                  class="form-input" 
+                  placeholder="如：DJI T40"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label">设备类型 <span class="required">*</span></label>
+                <select v-model="formData.type" class="form-select">
+                  <option value="">请选择设备类型</option>
+                  <option value="spray">植保无人机</option>
+                  <option value="survey">测绘无人机</option>
+                  <option value="inspection">检测无人机</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">品牌 <span class="required">*</span></label>
+                <select v-model="formData.brand" class="form-select">
+                  <option value="">请选择品牌</option>
+                  <option value="dji">大疆 (DJI)</option>
+                  <option value="xaircraft">极飞 (XAIRCRAFT)</option>
+                  <option value="other">其他</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 租赁信息 -->
+          <div class="form-section">
+            <h3 class="section-title">💰 租赁信息</h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">租赁价格 <span class="required">*</span></label>
+                <div class="input-with-unit">
+                  <input 
+                    type="number" 
+                    v-model="formData.price" 
+                    class="form-input" 
+                    placeholder="请输入价格"
+                  />
+                  <span class="unit-label">元/小时</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">设备状态</label>
+                <select v-model="formData.status" class="form-select">
+                  <option value="available">可租赁</option>
+                  <option value="maintenance">维护中</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 设备信息 -->
+          <div class="form-section">
+            <h3 class="section-title">📅 设备信息</h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">购买日期</label>
+                <input 
+                  type="date" 
+                  v-model="formData.purchaseDate" 
+                  class="form-input"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label">累计使用时长</label>
+                <div class="input-with-unit">
+                  <input 
+                    type="number" 
+                    v-model="formData.totalHours" 
+                    class="form-input" 
+                    placeholder="累计使用时长"
+                  />
+                  <span class="unit-label">小时</span>
+                </div>
+              </div>
+              <div class="form-group full-width">
+                <label class="form-label">设备所在地 <span class="required">*</span></label>
+                <input 
+                  type="text" 
+                  v-model="formData.location" 
+                  class="form-input" 
+                  placeholder="请输入设备所在地址"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- 设备描述 -->
+          <div class="form-section">
+            <h3 class="section-title">📝 设备描述</h3>
+            <div class="form-group">
+              <label class="form-label">详细描述</label>
+              <textarea 
+                v-model="formData.description" 
+                class="form-textarea" 
+                placeholder="请描述设备的详细配置、特点、使用注意事项等"
+                rows="4"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- 设备图片 -->
+          <div class="form-section">
+            <h3 class="section-title">📷 设备图片 <span class="required">*</span></h3>
+            <div class="upload-grid">
+              <div class="upload-item main">
+                <span class="upload-icon">📷</span>
+                <span class="upload-text">封面图片</span>
+                <span class="upload-hint">点击上传</span>
+              </div>
+              <div class="upload-item">
+                <span class="upload-icon">📷</span>
+                <span class="upload-text">图片 2</span>
+                <span class="upload-hint">点击上传</span>
+              </div>
+              <div class="upload-item">
+                <span class="upload-icon">📷</span>
+                <span class="upload-text">图片 3</span>
+                <span class="upload-hint">点击上传</span>
+              </div>
+              <div class="upload-item">
+                <span class="upload-icon">📷</span>
+                <span class="upload-text">图片 4</span>
+                <span class="upload-hint">点击上传</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 认证信息 -->
+          <div class="form-section">
+            <h3 class="section-title">✓ 认证信息</h3>
+            <div class="certification-info">
+              <div class="certification-item">
+                <span class="cert-icon">📜</span>
+                <div class="cert-content">
+                  <span class="cert-label">飞行许可证</span>
+                  <span class="cert-status">未上传</span>
+                </div>
+                <button class="cert-btn">上传</button>
+              </div>
+              <div class="certification-item">
+                <span class="cert-icon">🔧</span>
+                <div class="cert-content">
+                  <span class="cert-label">维护记录</span>
+                  <span class="cert-status">未上传</span>
+                </div>
+                <button class="cert-btn">上传</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 提交按钮 -->
+        <div class="form-footer">
+          <button class="btn-secondary" @click="saveDraft">保存草稿</button>
+          <button class="btn-primary" @click="submitDevice">提交审核</button>
+        </div>
+      </div>
+
+      <!-- 右侧提示 -->
+      <div class="form-tips">
+        <div class="tips-card">
+          <h4>💡 添加提示</h4>
+          <ul class="tips-list">
+            <li>请确保设备信息真实有效</li>
+            <li>上传清晰的设备照片有助于提高曝光率</li>
+            <li>合理的定价可以提高租赁成功率</li>
+            <li>认证信息完善的设备更受飞手青睐</li>
+          </ul>
+        </div>
+        <div class="tips-card">
+          <h4>📋 审核标准</h4>
+          <ul class="tips-list">
+            <li>设备信息完整、真实</li>
+            <li>设备图片清晰、可辨认</li>
+            <li>租赁价格合理</li>
+            <li>具备相关资质证明</li>
+          </ul>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from '../utils/axios'
 import { ElMessage } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
 
 export default {
   name: 'AddDevice',
   setup() {
     const router = useRouter()
-    const deviceFormRef = ref(null)
-    const loading = ref(false)
     
-    const deviceForm = reactive({
-      deviceName: '', // 设备名称
-      deviceModel: '',
-      deviceType: '',
-      serialNumber: '',
+    const formData = reactive({
+      name: '',
+      model: '',
+      type: '',
+      brand: '',
+      price: '',
+      status: 'available',
       purchaseDate: '',
-      status: '1',
-      manufacturer: '', // 设备制造商
-      brand: '', // 品牌
-      maxLoad: '', // 最大载重(kg)
-      endurance: '', // 续航时间(分钟)
-      hourlyRent: '', // 每小时租金(元)
-      picture: '' // 设备图片URL
+      totalHours: '',
+      location: '',
+      description: ''
     })
     
-    const imageUrl = ref('')
-    const imageFile = ref(null)
-    
-    const rules = {
-      deviceName: [
-        { required: true, message: '请输入设备名称', trigger: 'blur' },
-        { min: 1, max: 100, message: '设备名称长度在1-100个字符', trigger: 'blur' }
-      ],
-      deviceModel: [
-        { required: true, message: '请输入设备型号', trigger: 'blur' },
-        { min: 1, max: 50, message: '设备型号长度在1-50个字符', trigger: 'blur' }
-      ],
-      manufacturer: [
-        { required: true, message: '请输入设备制造商', trigger: 'blur' },
-        { min: 1, max: 50, message: '制造商名称长度在1-50个字符', trigger: 'blur' }
-      ],
-      deviceType: [
-        { required: true, message: '请选择设备类型', trigger: 'change' }
-      ],
-      serialNumber: [
-        { required: true, message: '请输入设备序列号', trigger: 'blur' },
-        { min: 5, max: 50, message: '序列号长度在5-50个字符', trigger: 'blur' }
-      ],
-      purchaseDate: [
-        { required: true, message: '请选择购买日期', trigger: 'change' }
-      ],
-      status: [
-        { required: true, message: '请选择设备状态', trigger: 'change' }
-      ],
-      brand: [
-        { required: true, message: '请选择品牌', trigger: 'change' }
-      ],
-      maxLoad: [
-        { required: true, message: '请输入最大载重', trigger: 'blur' },
-        { type: 'number', min: 0, message: '最大载重必须大于等于0', trigger: 'blur' }
-      ],
-      endurance: [
-        { required: true, message: '请输入续航时间', trigger: 'blur' },
-        { type: 'number', min: 0, message: '续航时间必须大于等于0', trigger: 'blur' }
-      ],
-      hourlyRent: [
-        { required: true, message: '请输入每小时租金', trigger: 'blur' },
-        { type: 'number', min: 0, message: '租金必须大于等于0', trigger: 'blur' }
-      ],
-      picture: [
-        { required: true, message: '请上传设备图片', trigger: 'change' }
-      ]
+    const saveDraft = () => {
+      ElMessage.success('草稿已保存')
     }
     
-    // 处理图片选择
-    const handleImageChange = (file) => {
-      // 检查文件类型
-      const isImage = file.raw.type.startsWith('image/')
-      if (!isImage) {
-        ElMessage.error('请上传图片文件！')
-        // 清空之前的选择，避免表单验证通过
-        deviceForm.picture = ''
-        imageFile.value = null
+    const submitDevice = () => {
+      if (!formData.name || !formData.model || !formData.type || !formData.brand) {
+        ElMessage.warning('请填写完整的设备基本信息')
+        return
+      }
+      if (!formData.price) {
+        ElMessage.warning('请填写租赁价格')
+        return
+      }
+      if (!formData.location) {
+        ElMessage.warning('请填写设备所在地')
         return
       }
       
-      // 检查文件大小（5MB）
-      const isLt5M = file.size / 1024 / 1024 < 5
-      if (!isLt5M) {
-        ElMessage.error('图片大小不能超过 5MB！')
-        // 清空之前的选择，避免表单验证通过
-        deviceForm.picture = ''
-        imageFile.value = null
-        return
-      }
-      
-      // 预览图片
-      imageFile.value = file.raw
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        try {
-          const result = e.target.result
-          imageUrl.value = result
-          // 直接将结果保存到表单中，确保验证能正确识别
-          deviceForm.picture = result
-        } catch (error) {
-          console.error('图片预览失败:', error)
-          ElMessage.error('图片预览失败，请重试')
-          deviceForm.picture = ''
-          imageFile.value = null
-        }
-      }
-      reader.onerror = (error) => {
-        console.error('文件读取失败:', error)
-        ElMessage.error('文件读取失败，请重试')
-        deviceForm.picture = ''
-        imageFile.value = null
-      }
-      reader.readAsDataURL(file.raw)
-    }
-    
-    // 提交表单
-    const handleSubmit = async () => {
-      try {
-        // 表单验证
-        await deviceFormRef.value.validate()
-        
-        loading.value = true
-        
-        // 准备设备数据
-        const submitData = {
-          deviceName: deviceForm.deviceName, // 设备名称
-          deviceModel: deviceForm.deviceModel, // 设备型号
-          serialNumber: deviceForm.serialNumber, // 设备序列号
-          deviceType: deviceForm.deviceType, // 设备类型
-          manufacturer: deviceForm.manufacturer, // 制造商
-          status: deviceForm.status, // 设备状态
-          purchaseDate: deviceForm.purchaseDate ? new Date(deviceForm.purchaseDate).toISOString().split('T')[0] : null,
-          brand: deviceForm.brand, // 品牌
-          maxLoad: deviceForm.maxLoad, // 最大载重(kg)
-          endurance: deviceForm.endurance, // 续航时间(分钟)
-          hourlyRent: deviceForm.hourlyRent, // 每小时租金(元)
-          picture: deviceForm.picture // 设备图片URL
-        }
-        
-        // 如果有新上传的图片文件，先上传图片
-        if (imageFile.value) {
-          console.log('需要上传图片:', imageFile.value.name)
-          const uploadFormData = new FormData()
-          uploadFormData.append('file', imageFile.value)
-          const uploadResponse = await axios.post('/device/image/upload', uploadFormData, {
-            headers: {'Content-Type': 'multipart/form-data'}
-          })
-          
-          // 更新submitData中的picture字段为上传后的URL
-          if (uploadResponse && uploadResponse.code === 200) {
-            // axios拦截器已返回response.data，直接获取图片路径
-            submitData.picture = uploadResponse.data
-            console.log('图片上传成功，路径:', submitData.picture)
-          } else {
-            console.error('图片上传返回数据格式不正确:', uploadResponse)
-            throw new Error('图片上传失败：' + (uploadResponse?.message || '服务器错误'))
-          }
-        }
-        
-        console.log('提交的数据:', submitData)
-        console.log('准备发送请求到:', '/device/add')
-        
-        // 发送请求到后端API
-        const response = await axios.post('/device/add', submitData)
-        console.log('API响应成功:', response)
-        
-        if (response && response.code === 200) {
-          ElMessage.success('设备添加成功！')
-          router.push('/devices')
-        } else {
-          throw new Error('设备添加失败：' + (response?.message || '服务器错误'))
-        }
-      } catch (error) {
-        console.error('添加设备失败:', error)
-        // 处理表单验证错误
-        if (error.name === 'ValidationError') {
-          ElMessage.error('表单验证失败，请检查输入')
-        } else {
-          ElMessage.error(error.message || '添加设备失败，请重试')
-        }
-      } finally {
-        loading.value = false
-      }
-    }
-    
-    // 取消操作
-    const handleCancel = () => {
-      router.push('/devices')
+      ElMessage.success('设备已提交审核！')
+      router.push('/owner/dashboard')
     }
     
     return {
-      deviceForm,
-      rules,
-      deviceFormRef,
-      loading,
-      imageUrl,
-      handleSubmit,
-      handleCancel,
-      handleImageChange,
-      Plus
+      router,
+      formData,
+      saveDraft,
+      submitDevice
     }
   }
 }
 </script>
 
 <style scoped>
-.add-device {
-  padding: 20px;
+.add-device-page {
+  min-height: 100vh;
+  background: #f8f9fa;
 }
 
-.card-header {
+.page-navbar {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 12px 24px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
 }
 
-.device-form {
-  margin-top: 20px;
-}
-
-/* 图片上传样式 */
-.avatar-uploader .el-upload {
-  border: 1px dashed #dcdfe6;
-  border-radius: 6px;
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   cursor: pointer;
-  position: relative;
+}
+
+.logo-icon {
+  font-size: 28px;
+}
+
+.logo-text {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f59e0b;
+}
+
+.navbar-center {
+  flex: 1;
+  max-width: 400px;
+  margin: 0 30px;
+}
+
+.search-box {
+  display: flex;
+  background: #f3f4f6;
+  border-radius: 20px;
   overflow: hidden;
 }
 
-.avatar-uploader .el-upload:hover {
-  border-color: #409EFF;
+.search-input {
+  flex: 1;
+  border: none;
+  padding: 8px 14px;
+  font-size: 13px;
+  background: transparent;
+  outline: none;
 }
 
-.avatar {
-  width: 200px;
-  height: 150px;
-  display: block;
-  object-fit: cover;
+.search-btn {
+  padding: 8px 16px;
+  background: #f59e0b;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
 }
 
-.avatar-placeholder {
-  width: 200px;
-  height: 150px;
+.navbar-right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.nav-btn {
+  padding: 6px 14px;
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  color: #4b5563;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.nav-btn:hover {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.nav-btn.active {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+  font-weight: 600;
+}
+
+.page-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+.form-container {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.form-header {
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.form-header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+}
+
+.form-header p {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.form-body {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background-color: #f5f7fa;
-  color: #909399;
+  gap: 24px;
 }
 
-.avatar-placeholder-icon {
-  font-size: 28px;
-  margin-bottom: 10px;
+.form-section {
+  padding: 20px;
+  background: #f9fafb;
+  border-radius: 12px;
 }
 
-.avatar-placeholder-text {
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 16px 0;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-label {
   font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
 }
 
-.upload-tips {
-  margin-top: 8px;
+.required {
+  color: #ef4444;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  padding: 10px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s;
+  outline: none;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+  font-family: inherit;
+}
+
+.input-with-unit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-with-unit .form-input {
+  flex: 1;
+}
+
+.unit-label {
+  font-size: 14px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.upload-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.upload-item {
+  border: 2px dashed #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.upload-item:hover {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.02);
+}
+
+.upload-item.main {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.02);
+}
+
+.upload-icon {
+  display: block;
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.upload-text {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.upload-hint {
   font-size: 12px;
-  color: #909399;
+  color: #9ca3af;
+}
+
+.certification-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.certification-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.cert-icon {
+  font-size: 28px;
+}
+
+.cert-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.cert-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+
+.cert-status {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.cert-btn {
+  padding: 6px 16px;
+  background: #f59e0b;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.cert-btn:hover {
+  background: #d97706;
+}
+
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btn-secondary,
+.btn-primary {
+  padding: 12px 32px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-secondary {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
+}
+
+.btn-secondary:hover {
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.btn-primary {
+  background: #f59e0b;
+  border: 1px solid #f59e0b;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #d97706;
+}
+
+.form-tips {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.tips-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.tips-card h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 16px 0;
+}
+
+.tips-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tips-list li {
+  font-size: 13px;
+  color: #6b7280;
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.tips-list li:last-child {
+  border-bottom: none;
+}
+
+@media (max-width: 1024px) {
+  .page-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-tips {
+    order: -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar-center {
+    display: none;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .upload-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .form-container {
+    padding: 20px;
+  }
+  
+  .form-footer {
+    flex-direction: column;
+  }
+  
+  .btn-secondary,
+  .btn-primary {
+    width: 100%;
+  }
 }
 </style>

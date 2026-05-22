@@ -91,15 +91,15 @@ export default {
     }
     
     const goToPublishDemand = () => {
-      router.push('/publish-demand')
+      router.push('/farmer/publish-demand')
     }
     
     const goToMyDemands = () => {
-      router.push('/my-demands')
+      router.push('/farmer/my-demands')
     }
     
     const goToWallet = () => {
-      router.push('/wallet')
+      router.push('/farmer/wallet')
     }
     
     return {
