@@ -13,7 +13,7 @@
 ### 后端技术栈
 - **框架**：Spring Boot 3.x
 - **ORM**：MyBatis Plus
-- **数据库**：MySQL、redis
+- **数据库**：MySQL、Redis
 - **安全**：Spring Security + JWT
 - **文档**：Swagger/OpenAPI
 
